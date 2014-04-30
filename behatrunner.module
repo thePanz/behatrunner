@@ -94,8 +94,28 @@ function behatrunner_deregister_module($module) {
 
 
 /**
+ * Retrieves all known test locations.
+ *
+ * @return array
+ *   An array of location objects.
+ */
+function behatrunner_get_test_locations() {
+  $query = 'SELECT * FROM {behatrunner_test_location}';
+  $result = db_query($query);
+  $locations = $result->fetchAll();
+
+  return $locations;
+}
+
+
+/**
  * Walk the known locations and discover tests to run.
  */
 function behatrunner_discover_tests() {
-  // TODO:
+  // Get all known test locations.
+  $locations = behatrunner_get_test_locations();
+
+  foreach ($locations as $location) {
+    // TODO:
+  }
 }
