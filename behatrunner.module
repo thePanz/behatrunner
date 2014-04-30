@@ -1,2 +1,101 @@
 <?php
+/**
+ * @file
+ * behatrunner module implementation
+ */
 
+/**
+ * Registers a test location.
+ *
+ * @param string $name
+ *   The name for this location.
+ *
+ * @param string $module
+ *   The name of the module registering this location.
+ *
+ * @param string $location
+ *   The location of the tests, relative to the Drupal base.
+ */
+function behatrunner_register_location($name, $module, $location) {
+  // Check for module entry already.
+  $record = behatrunner_get_module_registration($module);
+
+  // If entry exists, remove it.
+  if ($record) {
+    behatrunner_deregister_location($record->btid);
+  }
+
+  // Add entry.
+  $data['name'] = $name;
+  $data['module'] = $module;
+  $data['location'] = $location;
+  $location_entry = entity_create('behatrunner_test_location', $data);
+  $location_entry->save();
+}
+
+
+/**
+ * Wrapper function for modules to register a test location.
+ *
+ * @param string $module
+ *   The name of the module registering this location.
+ *
+ * @param string $test_location
+ *   The location of the tests, relative to the module.
+ */
+function behatrunner_register_module($module, $test_location) {
+  $location = drupal_get_path('module', $module) . '/' . $test_location;
+  behatrunner_register_location($module, $module, $location);
+}
+
+
+/**
+ * Looks up a registration for the given module.
+ *
+ * @param string $module
+ *   The module name.
+ *
+ * @return object
+ *   The record object.
+ */
+function behatrunner_get_module_registration($module) {
+  $query = 'SELECT btid FROM {behatrunner_test_location}';
+  $query .= ' WHERE name=:name AND module=:module';
+  $result = db_query($query, array(':name' => $name, ':module' => $module));
+  $record = $result->fetchObject();
+
+  return $record;
+}
+
+
+/**
+ * De-registers a test location.
+ *
+ * @param int $btid
+ *   The id for this location.
+ */
+function behatrunner_deregister_location($btid) {
+  entity_delete('behatrunner_test_location', $btid);
+}
+
+
+/**
+ * De-registers a module's test location.
+ *
+ * @param string $module
+ *   The name for this location.
+ */
+function behatrunner_deregister_module($module) {
+  $record = behatrunner_get_module_registration($module);
+  if ($record) {
+    behatrunner_deregister_location($record->btid);
+  }
+}
+
+
+/**
+ * Walk the known locations and discover tests to run.
+ */
+function behatrunner_discover_tests() {
+  // TODO:
+}

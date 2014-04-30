@@ -18,11 +18,17 @@ function behatrunner_test_location_schema() {
         'unsigned' => TRUE,
         'not null' => TRUE,
       ),
+      'name' => array(
+        'type' => 'varchar',
+        'length' => 256,
+        'not null' => FALSE,
+        'description' => 'The name for this test location.',
+      ),
       'module' => array(
         'type' => 'varchar',
         'length' => 256,
         'not null' => FALSE,
-        'description' => 'The module declaring these tests.',
+        'description' => 'The module (if any) declaring this location.',
       ),
       'location' => array(
         'type' => 'varchar',

@@ -41,9 +41,15 @@ function behatrunner_test_location_entity_property_info() {
     'type' => 'integer',
     'schema field' => 'btid',
   );
+  $properties['name'] = array(
+    'label' => 'Name',
+    'description' => t('The name for this test location.'),
+    'type' => 'varchar',
+    'schema field' => 'module',
+  );
   $properties['module'] = array(
     'label' => 'Module',
-    'description' => t('The module name declaring these tests.'),
+    'description' => t(' The module (if any) declaring this location.'),
     'type' => 'varchar',
     'schema field' => 'module',
   );
