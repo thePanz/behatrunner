@@ -26,12 +26,12 @@ function behatrunner_drush_command() {
     ),
     'aliases' => array('br'),
   );
-  $items['behat-list-registrations'] = array(
+  $items['behat-list-locations'] = array(
     'description' => dt('List registered Behat test locations.'),
     'examples' => array(
-      'Standard example' => 'drush behat-list-registrations',
+      'Standard example' => 'drush behat-list-locations',
     ),
-    'aliases' => array('blr'),
+    'aliases' => array('bll'),
   );
   $items['behat-register-location'] = array(
     'description' => dt('Register a Behat test location.'),
@@ -58,9 +58,9 @@ function drush_behatrunner_behatrun($arg1 = NULL) {
 
 
 /**
- * List known test location registrations.
+ * List known test locations.
  */
-function drush_behatrunner_behat_list_registrations($arg1 = NULL) {
+function drush_behatrunner_behat_list_locations($arg1 = NULL) {
   $registrations = behatrunner_get_test_locations();
 
   if ($registrations) {
