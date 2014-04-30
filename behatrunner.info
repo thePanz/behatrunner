@@ -1,4 +1,5 @@
 name = Behat Runner
 core = 7.x
+package = Development
 
 dependencies[] = composer_manager
