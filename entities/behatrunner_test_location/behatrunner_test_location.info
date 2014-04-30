@@ -1,4 +1,4 @@
-name = Behat Runner Test location
+name = Behat Runner Test Location Entity
 description = Custom entity type for storing the location of Behat tests
 core = 7.x
 package = Development
