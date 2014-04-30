@@ -1,0 +1,6 @@
+name = Behat Runner Test location
+description = Custom entity type for storing the location of Behat tests
+core = 7.x
+package = Development
+
+dependencies[] = entity

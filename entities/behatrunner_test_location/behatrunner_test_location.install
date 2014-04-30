@@ -1,0 +1,38 @@
+<?php
+
+/**
+ * @file
+ * Install, update and uninstall functions.
+ */
+
+/**
+ * Implements hook_schema().
+ */
+function behatrunner_test_location_schema() {
+  $schema['behatrunner_test_location'] = array(
+    'description' => 'The base table for behatrunner test locations.',
+    'fields' => array(
+      'btid' => array(
+        'description' => 'The primary identifier.',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'module' => array(
+        'type' => 'varchar',
+        'length' => 256,
+        'not null' => FALSE,
+        'description' => 'The module declaring these tests.',
+      ),
+      'location' => array(
+        'type' => 'varchar',
+        'length' => 256,
+        'not null' => TRUE,
+        'description' => 'The location of the tests, relative to the Drupal base.',
+      ),
+    ),
+    'primary key' => array('btid'),
+  );
+
+  return $schema;
+}
