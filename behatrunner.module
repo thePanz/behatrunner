@@ -144,7 +144,7 @@ function behatrunner_execute_tests($location_filters = array(), $tag_filters = a
       $command = $vendor . '/bin/behat';
       $command .= $tags;
       $command .= ' ' . DRUPAL_ROOT . '/' . $registration->location;
-      $command .= ' --config ' . drupal_get_path('module', 'behatrunner') . '/behat.yml';
+      $command .= ' --config ' . DRUPAL_ROOT . '/' . drupal_get_path('module', 'behatrunner') . '/behat.yml';
       drush_print($command);
       exec($command, $results);
     }
