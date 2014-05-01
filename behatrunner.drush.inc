@@ -40,8 +40,9 @@ function behatrunner_drush_command() {
       'module' => 'Name of the module containing these tests. Optional.',
       'location' => 'The location of the tests, relative to the Drupal base. Required.',
     ),
+    'required-arguments' => TRUE,
     'examples' => array(
-      'Standard example' => 'drush behat-register-location',
+      'Standard example' => 'drush brl behatrunner behatrunner sites/all/modules/contrib/behatrunner/tests/BehatRunner',
     ),
     'aliases' => array('brl'),
   );
@@ -100,7 +101,6 @@ function drush_behatrunner_behat_list_locations($arg1 = NULL) {
  *   The location of the tests.
  */
 function drush_behatrunner_behat_register_location($name, $module, $location) {
-
   behatrunner_register_location($name, $module, $location);
 }
 
