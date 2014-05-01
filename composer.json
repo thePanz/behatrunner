@@ -1,9 +1,22 @@
 {
+    "name": "drupal/behatrunner",
+    "type": "drupal-module",
+    "description": "Runs Behats test for Drupal.",
+    "keywords": ["behat", "drupal"],
+    "homepage": "",
+    "license": "GPL-2.0+",
+    "authors": [
+        {
+            "name": "Nate Swart"
+        },
+        {
+            "name": "Matthew Grasmick"
+        }
+    ],
     "require": {
-        "behat/behat": "2.4.*@stable"
-    },
-
-    "config": {
-        "bin-dir": "bin/"
+        "behat/mink-extension": "*",
+        "behat/mink-goutte-driver": "*",
+        "behat/mink-selenium2-driver": "*",
+        "drupal/drupal-extension": "dev-master"
     }
 }
