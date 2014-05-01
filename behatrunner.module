@@ -7,47 +7,37 @@
 /**
  * Registers a test location.
  *
- * @param string $name
- *   The name for this location.
- *
  * @param string $module
  *   The name of the module registering this location.
  *
- * @param string $location
- *   The location of the tests, relative to the Drupal base.
+ * @param string $features_path
+ *   The location of the tests, relative to the module directory.
  */
-function behatrunner_register_location($name, $module, $location) {
+function behatrunner_register_location($module, $features_path) {
   // Check for module entry already.
   $record = behatrunner_get_module_registration($module);
 
   // If entry exists, remove it.
   if ($record) {
+    // @todo This is not working!
     behatrunner_deregister_location($record->btid);
   }
 
-  // Add entry.
-  $data['name'] = $name;
-  $data['module'] = $module;
-  $data['location'] = $location;
-  $location_entry = entity_create('behatrunner_test_location', $data);
-  $location_entry->save();
+  $system_path= DRUPAL_ROOT . '/' . drupal_get_path('module', $module) . '/' . $features_path;
+  $features = file_scan_directory($system_path, '/.*\.feature$/', array('recurse' => TRUE));
+
+  foreach($features as $feature) {
+    // Add entry.
+    // @todo Get human-readable name of module.
+    $data['name'] = $module;
+    $data['module'] = $module;
+    // Get the path of the feature, relative to the module.
+    $data['location'] = str_replace(DRUPAL_ROOT . '/', '', $feature->uri);
+    $location_entry = entity_create('behatrunner_test_location', $data);
+    $location_entry->save();
+  }
+
 }
-
-
-/**
- * Wrapper function for modules to register a test location.
- *
- * @param string $module
- *   The name of the module registering this location.
- *
- * @param string $test_location
- *   The location of the tests, relative to the module.
- */
-function behatrunner_register_module($module, $test_location) {
-  $location = drupal_get_path('module', $module) . '/' . $test_location;
-  behatrunner_register_location($module, $module, $location);
-}
-
 
 /**
  * Looks up a registration for the given module.
@@ -146,13 +136,15 @@ function behatrunner_execute_tests($location_filters = array(), $tag_filters = a
   }
 
   foreach ($registrations as $registration) {
+    drush_print($registration);
     // Skip locations listed in the location filter.
     if (!in_array($registration->location, $location_filters)) {
       // Construct the command.
       $vendor = composer_manager_vendor_dir();
       $command = $vendor . '/bin/behat';
       $command .= $tags;
-      $command .= ' --config ' . $registration->location . '/custom-config.yml';
+      $command .= ' ' . DRUPAL_ROOT . '/' . $registration->location;
+      $command .= ' --config ' . drupal_get_path('module', 'behatrunner') . '/behat.yml';
       drush_print($command);
       exec($command, $results);
     }

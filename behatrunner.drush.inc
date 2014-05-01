@@ -36,13 +36,12 @@ function behatrunner_drush_command() {
   $items['behat-register-location'] = array(
     'description' => dt('Register a Behat test location.'),
     'arguments' => array(
-      'name' => 'Name of the location. Required.',
-      'module' => 'Name of the module containing these tests. Optional.',
-      'location' => 'The location of the tests, relative to the Drupal base. Required.',
+      'module' => 'Name of the module containing these tests. Required',
+      'features_path' => 'The path of the .features files, relative to the module directory. Required.',
     ),
     'required-arguments' => TRUE,
     'examples' => array(
-      'Standard example' => 'drush brl behatrunner behatrunner sites/all/modules/contrib/behatrunner/tests/BehatRunner',
+      'Standard example' => 'drush brl behatrunner features',
     ),
     'aliases' => array('brl'),
   );
@@ -91,17 +90,14 @@ function drush_behatrunner_behat_list_locations($arg1 = NULL) {
 /**
  * Register a test location.
  *
- * @param string $name
- *   The name of the location.
- *
  * @param string $module
  *   The module (if any) containing these tests.
  *
- * @param string $location
+ * @param string $features_path
  *   The location of the tests.
  */
-function drush_behatrunner_behat_register_location($name, $module, $location) {
-  behatrunner_register_location($name, $module, $location);
+function drush_behatrunner_behat_register_location($module, $features_path = 'features') {
+  behatrunner_register_location($module, $features_path);
 }
 
 

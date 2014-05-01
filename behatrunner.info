@@ -5,3 +5,4 @@ package = Development
 dependencies[] = behatrunner_test_location
 dependencies[] = composer_manager
 dependencies[] = entity
+dependencies[] = views
