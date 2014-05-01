@@ -116,6 +116,47 @@ function behatrunner_discover_tests() {
   $locations = behatrunner_get_test_locations();
 
   foreach ($locations as $location) {
-    // TODO:
+    // TODO: Discover tests, record tags.
   }
+}
+
+
+/**
+ * Execute Behat tests.
+ *
+ * @param array $location_filters
+ *   An array of locations to filter out. If empty, all tests will be run.
+ *
+ * @param array $tag_filters
+ *   An array of tags to filter out. If empty, all tests will be run.
+ */
+function behatrunner_execute_tests($location_filters = array(), $tag_filters = array()) {
+  composer_manager_register_autoloader();
+  $registrations = behatrunner_get_test_locations();
+
+  // TODO: Replace exec() logic with direct PHP calls.
+  $results = array();
+
+  // Construct tag filter params.
+  $tags = '';
+  if (count($tag_filters) > 0) {
+    $tags = ' --tags "~@';
+    $tags .= implode($tag_filters, '&&~@');
+    $tags .= '"';
+  }
+
+  foreach ($registrations as $registration) {
+    // Skip locations listed in the location filter.
+    if (!in_array($registration->location, $location_filters)) {
+      // Construct the command.
+      $vendor = composer_manager_vendor_dir();
+      $command = $vendor . '/bin/behat';
+      $command .= $tags;
+      $command .= ' --config ' . $registration->location . '/custom-config.yml';
+      drush_print($command);
+      exec($command, $results);
+    }
+  }
+
+  return $results;
 }

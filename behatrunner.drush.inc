@@ -45,6 +45,13 @@ function behatrunner_drush_command() {
     ),
     'aliases' => array('brl'),
   );
+  $items['behat-run-tests'] = array(
+    'description' => dt('Run the behat tests.'),
+    'examples' => array(
+      'Standard example' => 'drush behat-run-tests',
+    ),
+    'aliases' => array('brun'),
+  );
   return $items;
 }
 
@@ -95,4 +102,15 @@ function drush_behatrunner_behat_list_locations($arg1 = NULL) {
 function drush_behatrunner_behat_register_location($name, $module, $location) {
 
   behatrunner_register_location($name, $module, $location);
+}
+
+
+/**
+ * Run behat tests.
+ */
+function drush_behatrunner_behat_run_tests() {
+  // TODO: Accept parameters.
+  $results = behatrunner_execute_tests();
+  // TODO: Format output.
+  drush_print_table($results);
 }
