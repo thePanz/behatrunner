@@ -135,8 +135,8 @@ function behatrunner_execute_tests($location_filters = array(), $tag_filters = a
     $tags .= '"';
   }
 
+  $results = '';
   foreach ($registrations as $registration) {
-    drush_print($registration);
     // Skip locations listed in the location filter.
     if (!in_array($registration->location, $location_filters)) {
       // Construct the command.
@@ -145,8 +145,8 @@ function behatrunner_execute_tests($location_filters = array(), $tag_filters = a
       $command .= $tags;
       $command .= ' ' . DRUPAL_ROOT . '/' . $registration->location;
       $command .= ' --config ' . DRUPAL_ROOT . '/' . drupal_get_path('module', 'behatrunner') . '/behat.yml';
-      drush_print($command);
-      exec($command, $results);
+      //drush_print($command);
+      $results .= shell_exec($command);
     }
   }
 

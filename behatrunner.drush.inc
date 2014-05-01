@@ -108,5 +108,5 @@ function drush_behatrunner_behat_run_tests() {
   // TODO: Accept parameters.
   $results = behatrunner_execute_tests();
   // TODO: Format output.
-  drush_print_table($results);
+  drush_print($results);
 }
