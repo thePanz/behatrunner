@@ -1,14 +1,17 @@
 <?php
 
 /**
- * @file
- * Install, update and uninstall functions.
+ * Implements hook_install().
  */
+function behatrunner_install() {
+  behatrunner_register_location('behatrunner', 'features', TRUE);
+}
+
 
 /**
  * Implements hook_schema().
  */
-function behatrunner_test_location_schema() {
+function behatrunner_schema() {
   $schema['behatrunner_test_location'] = array(
     'description' => 'The base table for behatrunner test locations.',
     'fields' => array(
@@ -24,17 +27,17 @@ function behatrunner_test_location_schema() {
         'not null' => FALSE,
         'description' => 'The name for this test location.',
       ),
-      'module' => array(
-        'type' => 'varchar',
-        'length' => 256,
-        'not null' => FALSE,
-        'description' => 'The module (if any) declaring this location.',
-      ),
       'location' => array(
         'type' => 'varchar',
         'length' => 256,
         'not null' => TRUE,
         'description' => 'The location of the tests, relative to the Drupal base.',
+      ),
+      'is_module' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 1,
+        'description' => 'Whether or not this location is associated with a module.',
       ),
     ),
     'primary key' => array('btid'),

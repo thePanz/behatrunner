@@ -47,17 +47,17 @@ function behatrunner_test_location_entity_property_info() {
     'type' => 'varchar',
     'schema field' => 'module',
   );
-  $properties['module'] = array(
-    'label' => 'Module',
-    'description' => t(' The module (if any) declaring this location.'),
-    'type' => 'varchar',
-    'schema field' => 'module',
-  );
   $properties['location'] = array(
     'label' => 'Location',
     'description' => t('The location of the tests, relative to the Drupal base.'),
     'type' => 'varchar',
     'schema field' => 'location',
+  );
+  $properties['is_module'] = array(
+    'label' => 'Is module',
+    'description' => t('Whether or not this location is associated with a module.'),
+    'type' => 'integer',
+    'schema field' => 'is_module',
   );
 }
 

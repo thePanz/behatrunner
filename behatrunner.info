@@ -2,7 +2,8 @@ name = Behat Runner
 core = 7.x
 package = Development
 
-dependencies[] = behatrunner_test_location
 dependencies[] = composer_manager
 dependencies[] = entity
 dependencies[] = views
+
+files[] = behatrunner.test_location.inc
