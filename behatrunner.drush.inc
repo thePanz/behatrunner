@@ -90,14 +90,14 @@ function drush_behatrunner_behat_list_locations($arg1 = NULL) {
 /**
  * Register a test location.
  *
- * @param string $module
- *   The module (if any) containing these tests.
+ * @param string $name
+ *   The name of this location.
  *
  * @param string $features_path
  *   The location of the tests.
  */
-function drush_behatrunner_behat_register_location($module, $features_path = 'features') {
-  behatrunner_register_location($module, $features_path);
+function drush_behatrunner_behat_register_location($name, $features_path = 'features', $is_module) {
+  behatrunner_register_location($name, $features_path, $is_module);
 }
 
 
