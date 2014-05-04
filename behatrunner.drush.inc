@@ -102,6 +102,7 @@ function drush_behatrunner_behat_register_module($module) {
  */
 function drush_behatrunner_behat_run_tests() {
   // TODO: Accept parameters.
+  module_load_include('inc', 'behatrunner', 'behatrunner');
   $results = behatrunner_execute_tests();
   // TODO: Format output.
   drush_print($results);

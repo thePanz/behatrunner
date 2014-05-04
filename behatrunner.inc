@@ -189,12 +189,12 @@ function behatrunner_deregister_module_scenarios($module) {
  * @return array
  *   An array of location objects.
  */
-function behatrunner_get_test_locations() {
-  $query = 'SELECT * FROM {behatrunner_test_location}';
+function behatrunner_get_scenario_registrations() {
+  $query = 'SELECT * FROM {behatrunner_scenario}';
   $result = db_query($query);
-  $locations = $result->fetchAll();
+  $registrations = $result->fetchAll();
 
-  return $locations;
+  return $registrations;
 }
 
 /**
@@ -202,9 +202,9 @@ function behatrunner_get_test_locations() {
  */
 function behatrunner_discover_tests() {
   // Get all known test locations.
-  $locations = behatrunner_get_test_locations();
+  $registrations = behatrunner_get_scenario_registrations();
 
-  foreach ($locations as $location) {
+  foreach ($registrations as $registration) {
     // TODO: Discover tests, record tags.
   }
 }
@@ -220,7 +220,7 @@ function behatrunner_discover_tests() {
  */
 function behatrunner_execute_tests($location_filters = array(), $tag_filters = array()) {
   composer_manager_register_autoloader();
-  $registrations = behatrunner_get_test_locations();
+  $registrations = behatrunner_get_scenario_registrations();
 
   // TODO: Replace exec() logic with direct PHP calls.
   $results = array();
