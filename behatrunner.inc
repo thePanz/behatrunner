@@ -60,9 +60,10 @@ function behatrunner_discover_module_features($module) {
 }
 
 /**
- * [behatrunner_register_feature_scenarios description]
- * @param  [type] $feature [description]
- * @return [type]          [description]
+ * Registers all scenarios for a given feature.
+ *
+ * @param object $feature
+ *   A Behat feature.
  */
 function behatrunner_register_feature_scenarios($feature) {
   $feature_location = behatrunner_convert_absolute_to_relative_path($feature->getFile());
@@ -75,6 +76,8 @@ function behatrunner_register_feature_scenarios($feature) {
     $entity = entity_create('behatrunner_scenario', $data);
     $entity->save();
   }
+
+  // @todo return somesthing here, particularly on failure.
 }
 
 /**
@@ -198,15 +201,40 @@ function behatrunner_get_scenario_registrations() {
 }
 
 /**
- * Walk the known locations and discover tests to run.
+ * Gets environmental parameters for Behat.
+ *
+ * @return array
+ *   An associateive array of environmental Behat parameters.
  */
-function behatrunner_discover_tests() {
-  // Get all known test locations.
-  $registrations = behatrunner_get_scenario_registrations();
+function behatrunner_get_env_params() {
+  $behat_params = parse_url(getEnv('BEHAT_PARAMS'));
 
-  foreach ($registrations as $registration) {
-    // TODO: Discover tests, record tags.
+  return $behat_params;
+}
+
+/**
+ * Sets an environmental Behat parameter.
+ * @param string $key
+ *   The parameter key.
+ *
+ * @param string $value
+ *   The parameter value.
+ *
+ * @return boolean
+ *   TRUE if parameter was set successfully.
+ */
+function behatrunner_set_env_param($key, $value) {
+  $behat_params = parse_url(getEnv('BEHAT_PARAMS'));
+  $behat_params[$key] = $value;
+
+  foreach ($behat_params as $param_key => $param_value) {
+    if ($param_value === '') {
+      unset($behat_params[$param_key]);
+    }
   }
+
+  $behat_params_value = http_build_query($behat_params);
+  return putEnv("BEHAT_PARAMS=$behat_params_value");
 }
 
 /**
@@ -217,9 +245,15 @@ function behatrunner_discover_tests() {
  *
  * @param array $tag_filters
  *   An array of tags to filter out. If empty, all tests will be run.
+ *
+ * @param array $formats
+ *   An array of formats to output.
  */
-function behatrunner_execute_tests($location_filters = array(), $tag_filters = array()) {
+function behatrunner_execute_tests($location_filters = array(), $tag_filters = array(), $formats = array('pretty')) {
   composer_manager_register_autoloader();
+
+  // @todo Allow registrations to be filtered so that we don't iterate over
+  // every single record if only a few tests are going to be executed.
   $registrations = behatrunner_get_scenario_registrations();
 
   // TODO: Replace exec() logic with direct PHP calls.
@@ -233,6 +267,27 @@ function behatrunner_execute_tests($location_filters = array(), $tag_filters = a
     $tags .= '"';
   }
 
+  // Build an array of output destinations for each format.
+  // @todo use a variable_get() to determine default value for format(s).
+  $out_dests = array();
+  foreach ($formats as $format) {
+    // Junit XML is output to file system.
+    if ($format == 'junit') {
+      $dest_dir = 'public://behat';
+      $output_dir = file_prepare_directory($dest_dir, FILE_CREATE_DIRECTORY);
+      $wrapper = file_stream_wrapper_get_instance_by_uri($dest_dir);
+      $output_dest = $wrapper->realpath();
+      $out_dests[$format] = $output_dest;
+    }
+    // Other formats are written to stdout.
+    else {
+      $out_dests[$format] = '';
+    }
+  }
+
+  $formats = ' --format="' . implode(',', $formats) . '"';
+  $out = ' --out="' . implode(',', $out_dests) . ',"';
+
   $results = '';
   foreach ($registrations as $registration) {
     // Skip locations listed in the location filter.
@@ -241,10 +296,15 @@ function behatrunner_execute_tests($location_filters = array(), $tag_filters = a
       $vendor = composer_manager_vendor_dir();
       $command = $vendor . '/bin/behat';
       $command .= $tags;
+      $command .= $formats;
+      $command .= $out;
       $command .= ' ' . DRUPAL_ROOT . '/' . $registration->location;
       $command .= ' --config ' . DRUPAL_ROOT . '/' . drupal_get_path('module', 'behatrunner') . '/behat.yml';
-      // drush_print($command);
+      drush_log("Executing $command");
       $results .= shell_exec($command);
+
+      // @todo Allow optional insertion of results into db using data from
+      // junit output.
     }
   }
 

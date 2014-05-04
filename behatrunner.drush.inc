@@ -46,6 +46,12 @@ function behatrunner_drush_command() {
   );
   $items['behat-run-tests'] = array(
     'description' => dt('Run the behat tests.'),
+    'options' => array(
+      'formats' => array(
+        'description' => 'The output formats',
+        'example_value' => 'junit',
+      ),
+    ),
     'examples' => array(
       'Standard example' => 'drush behat-run-tests',
     ),
@@ -101,9 +107,15 @@ function drush_behatrunner_behat_register_module($module) {
  * Run behat tests.
  */
 function drush_behatrunner_behat_run_tests() {
+  $formats = array();
+  // @todo use a variable_get() to determine default value for format(s).
+  if ($formats_option = drush_get_option('formats', 'pretty')) {
+    $formats = explode(',', $formats_option);
+  }
+
   // TODO: Accept parameters.
   module_load_include('inc', 'behatrunner', 'behatrunner');
-  $results = behatrunner_execute_tests();
+  $results = behatrunner_execute_tests(array(), array(), $formats);
   // TODO: Format output.
   drush_print($results);
 }
