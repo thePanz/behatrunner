@@ -12,10 +12,10 @@ function behatrunner_install() {
  * Implements hook_schema().
  */
 function behatrunner_schema() {
-  $schema['behatrunner_test_location'] = array(
+  $schema['behatrunner_scenario'] = array(
     'description' => 'The base table for behatrunner test locations.',
     'fields' => array(
-      'btid' => array(
+      'bsid' => array(
         'description' => 'The primary identifier.',
         'type' => 'serial',
         'unsigned' => TRUE,
@@ -33,14 +33,32 @@ function behatrunner_schema() {
         'not null' => TRUE,
         'description' => 'The location of the tests, relative to the Drupal base.',
       ),
-      'is_module' => array(
-        'type' => 'int',
+      'module' => array(
+        'type' => 'varchar',
+        'length' => 256,
         'not null' => TRUE,
-        'default' => 1,
-        'description' => 'Whether or not this location is associated with a module.',
+        'description' => 'This module to which this scenario belongs.',
       ),
     ),
-    'primary key' => array('btid'),
+    'primary key' => array('bsid'),
+  );
+  $schema['behatrunner_log'] = array(
+    'description' => 'A log of behat runner runs.',
+    'fields' => array(
+      'blid' => array(
+        'description' => 'The primary identifier.',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'name' => array(
+        'type' => 'varchar',
+        'length' => 256,
+        'not null' => FALSE,
+        'description' => 'The name of the scenario.',
+      ),
+    ),
+    'primary key' => array('blid'),
   );
 
   return $schema;

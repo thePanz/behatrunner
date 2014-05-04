@@ -33,17 +33,16 @@ function behatrunner_drush_command() {
     ),
     'aliases' => array('bll'),
   );
-  $items['behat-register-location'] = array(
-    'description' => dt('Register a Behat test location.'),
+  $items['behat-register-module'] = array(
+    'description' => dt('Register Behat scenarios for a given module.'),
     'arguments' => array(
-      'module' => 'Name of the module containing these tests. Required',
-      'features_path' => 'The path of the .features files, relative to the module directory. Required.',
+      'module' => 'Name of the module containing the scenarios. Required',
     ),
     'required-arguments' => TRUE,
     'examples' => array(
-      'Standard example' => 'drush brl behatrunner features',
+      'Standard example' => 'drush brm behatrunner',
     ),
-    'aliases' => array('brl'),
+    'aliases' => array('brm'),
   );
   $items['behat-run-tests'] = array(
     'description' => dt('Run the behat tests.'),
@@ -88,18 +87,15 @@ function drush_behatrunner_behat_list_locations($arg1 = NULL) {
 }
 
 /**
- * Register a test location.
+ * Register a module's scenarios.
  *
- * @param string $name
- *   The name of this location.
- *
- * @param string $features_path
- *   The location of the tests.
+ * @param string $module
+ *   The name of the module to register.
  */
-function drush_behatrunner_behat_register_location($name, $features_path = 'features', $is_module) {
-  behatrunner_register_location($name, $features_path, $is_module);
+function drush_behatrunner_behat_register_module($module) {
+  module_load_include('inc', 'behatrunner', 'behatrunner');
+  behatrunner_register_module($module);
 }
-
 
 /**
  * Run behat tests.

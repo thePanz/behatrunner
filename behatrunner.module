@@ -5,227 +5,77 @@
  */
 
 /**
- * Registers a test location.
- *
- * @param string $name
- *   The name of this location. If a module is registering this location,
- *    this value should be the module name.
- *
- * @param string $features_path
- *   The location of the tests, relative to the module directory.
- *
- * @param bool $is_module
- *   Is this a module registering this location. If so, it is expected that
- *    The $name passed in will be the module name.
- */
-function behatrunner_register_location($name, $features_path, $is_module = 1) {
-  // Check for module entry already.
-  if ($is_module) {
-    $record = behatrunner_get_module_registration($name);
-
-    // If entry exists, remove it.
-    if ($record) {
-      // @todo This is not working!
-      behatrunner_deregister_location($record->btid);
-    }
-  }
-
-  // Add entry.
-  $data['name'] = $name;
-  $data['location'] = $features_path;
-  $data['is_module'] = $is_module;
-  $location_entry = entity_create('behatrunner_test_location', $data);
-  $location_entry->save();
-
-
-  // @todo move this logic to it's own discovery function
-  /*
-  $system_path = DRUPAL_ROOT . '/' . drupal_get_path('module', $module) . '/' . $features_path;
-  $features = file_scan_directory($system_path, '/.*\.feature$/', array('recurse' => TRUE));
-
-  foreach ($features as $feature) {
-    // Add entry.
-    // @todo Get human-readable name of module.
-    $data['name'] = $module;
-    // Get the path of the feature, relative to the module.
-    $data['location'] = str_replace(DRUPAL_ROOT . '/', '', $feature->uri);
-    $location_entry = entity_create('behatrunner_test_location', $data);
-    $location_entry->save();
-  }
-  */
-
-}
-
-/**
- * Looks up a registration for the given module.
- *
- * @param string $name
- *   The module name.
- *
- * @return object
- *   The record object.
- */
-function behatrunner_get_module_registration($name) {
-  $query = 'SELECT * FROM {behatrunner_test_location}';
-  $query .= ' WHERE name=:name AND is_module=TRUE';
-  $result = db_query($query, array(':name' => $name));
-  $record = $result->fetchObject();
-
-  return $record;
-}
-
-
-/**
- * De-registers a test location.
- *
- * @param int $btid
- *   The id for this location.
- */
-function behatrunner_deregister_location($btid) {
-  entity_delete('behatrunner_test_location', $btid);
-}
-
-
-/**
- * De-registers a module's test location.
- *
- * @param string $module
- *   The name for this location.
- */
-function behatrunner_deregister_module($module) {
-  $record = behatrunner_get_module_registration($module);
-  if ($record) {
-    behatrunner_deregister_location($record->btid);
-  }
-}
-
-
-/**
- * Retrieves all known test locations.
- *
- * @return array
- *   An array of location objects.
- */
-function behatrunner_get_test_locations() {
-  $query = 'SELECT * FROM {behatrunner_test_location}';
-  $result = db_query($query);
-  $locations = $result->fetchAll();
-
-  return $locations;
-}
-
-
-/**
- * Walk the known locations and discover tests to run.
- */
-function behatrunner_discover_tests() {
-  // Get all known test locations.
-  $locations = behatrunner_get_test_locations();
-
-  foreach ($locations as $location) {
-    // TODO: Discover tests, record tags.
-  }
-}
-
-
-/**
- * Execute Behat tests.
- *
- * @param array $location_filters
- *   An array of locations to filter out. If empty, all tests will be run.
- *
- * @param array $tag_filters
- *   An array of tags to filter out. If empty, all tests will be run.
- */
-function behatrunner_execute_tests($location_filters = array(), $tag_filters = array()) {
-  composer_manager_register_autoloader();
-  $registrations = behatrunner_get_test_locations();
-
-  // TODO: Replace exec() logic with direct PHP calls.
-  $results = array();
-
-  // Construct tag filter params.
-  $tags = '';
-  if (count($tag_filters) > 0) {
-    $tags = ' --tags "~@';
-    $tags .= implode($tag_filters, '&&~@');
-    $tags .= '"';
-  }
-
-  $results = '';
-  foreach ($registrations as $registration) {
-    // Skip locations listed in the location filter.
-    if (!in_array($registration->location, $location_filters)) {
-      // Construct the command.
-      $vendor = composer_manager_vendor_dir();
-      $command = $vendor . '/bin/behat';
-      $command .= $tags;
-      $command .= ' ' . DRUPAL_ROOT . '/' . $registration->location;
-      $command .= ' --config ' . DRUPAL_ROOT . '/' . drupal_get_path('module', 'behatrunner') . '/behat.yml';
-      // drush_print($command);
-      $results .= shell_exec($command);
-    }
-  }
-
-  return $results;
-}
-
-
-
-/**
  * Implements hook_entity_info().
  */
-function behatrunner_test_location_entity_info() {
+function behatrunner_entity_info() {
   return array(
-    'behatrunner_test_location' => array(
-      'label' => t('Behat Runner Test location'),
-      'entity class' => 'BehatRunnerTestLocation',
-      'controller class' => 'BehatRunnerTestLocationController',
-      'base table' => 'behatrunner_test_location',
-      'uri callback' => 'behatrunner_test_location_uri',
+    'behatrunner_scenario' => array(
+      'label' => t('Behat Runner Scenario'),
+      'entity class' => 'BehatRunnerScenario',
+      'controller class' => 'BehatRunnerScenarioController',
+      'base table' => 'behatrunner_scenario',
+      'uri callback' => 'behatrunner_scenario_uri',
       'fieldable' => TRUE,
       'entity keys' => array(
-        'id' => 'btid',
+        'id' => 'bsid',
       ),
       'static cache' => TRUE,
-      'module' => 'behatrunner_test_location',
+      'module' => 'behatrunner_scenario',
       'views controller class' => 'EntityDefaultViewsController',
     ),
   );
 }
 
-
 /**
  * Implements hook_entity_property_info().
  */
-function behatrunner_test_location_entity_property_info() {
+function behatrunner_entity_property_info() {
   $info = array();
-  $properties = &$info['behatrunner_test_location']['properties'];
+  $properties = &$info['behatrunner_scenario']['properties'];
 
-  $properties['btid'] = array(
-    'label' => 'Behat Runner Test Location ID',
+  $properties['bsid'] = array(
+    'label' => 'Behat Runner Scenario ID',
     'description' => t('The unique ID for the behatrunner_test_location.'),
     'type' => 'integer',
-    'schema field' => 'btid',
+    'schema field' => 'bsid',
   );
   $properties['name'] = array(
     'label' => 'Name',
-    'description' => t('The name for this test location.'),
+    'description' => t('The machine-readable name of this scenario.'),
     'type' => 'varchar',
-    'schema field' => 'module',
+    'schema field' => 'name',
   );
   $properties['location'] = array(
     'label' => 'Location',
-    'description' => t('The location of the tests, relative to the Drupal base.'),
+    'description' => t('The location of the scenario, relative to the Drupal base.'),
     'type' => 'varchar',
     'schema field' => 'location',
   );
-  $properties['is_module'] = array(
-    'label' => 'Is module',
-    'description' => t('Whether or not this location is associated with a module.'),
-    'type' => 'integer',
-    'schema field' => 'is_module',
+  $properties['module'] = array(
+    'label' => 'Module',
+    'description' => t('The module to which this scenario belongs.'),
+    'type' => 'varchar',
+    'schema field' => 'module',
   );
+}
+
+/**
+ * Implements hook_permission().
+ */
+function behatrunner_permission() {
+  $permissions = array(
+    'create behat scenario entities' => array(
+      'title' => t('Create behat scenario'),
+      'description' => t('Allows users to create behat scenario.'),
+      'restrict access' => TRUE,
+    ),
+    'view behat scenario entities' => array(
+      'title' => t('View behat scenario'),
+      'description' => t('Allows users to view behat scenario.'),
+      'restrict access' => TRUE,
+    ),
+  );
+  return $permissions;
 }
 
 
@@ -246,56 +96,3 @@ function behatrunner_test_location_access($op, $projectqa_phploc_result, $accoun
           || user_access('view behatrunner_test_location entities', $account);
   }
 }
-
-/**
- * Implements hook_permission().
- */
-function behatrunner_test_location_permission() {
-  $permissions = array(
-    'create behatrunner_test_location entities' => array(
-      'title' => t('Create behatrunner_test_location'),
-      'description' => t('Allows users to create behatrunner_test_location.'),
-      'restrict access' => TRUE,
-    ),
-    'view behatrunner_test_location entities' => array(
-      'title' => t('View behatrunner_test_location'),
-      'description' => t('Allows users to view behatrunner_test_location.'),
-      'restrict access' => TRUE,
-    ),
-  );
-  return $permissions;
-}
-
-
-/**
- * BehatRunnerTestLocation class.
- */
-class BehatRunnerTestLocation extends Entity {
-
-  /**
-   * The default label.
-   *
-   * @return int
-   *   behatrunner_test_location btid
-   */
-  protected function defaultLabel() {
-    return $this->btid;
-  }
-
-  /**
-   * The default URI.
-   *
-   * @return array
-   *   An array containing the path to the behatrunner_test_location
-   */
-  protected function defaultUri() {
-    return array('path' => 'behatrunner_test_location/' . $this->identifier());
-  }
-}
-
-
-/**
- * BehatRunnerTestLocationController class
- */
-class BehatRunnerTestLocationController extends EntityAPIController {}
-
