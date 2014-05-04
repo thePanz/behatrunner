@@ -39,15 +39,15 @@ function behatrunner_entity_property_info() {
     'type' => 'integer',
     'schema field' => 'bsid',
   );
-  $properties['name'] = array(
-    'label' => 'Name',
-    'description' => t('The machine-readable name of this scenario.'),
+  $properties['title'] = array(
+    'label' => 'title',
+    'description' => t('The human-readable title of this scenario.'),
     'type' => 'varchar',
-    'schema field' => 'name',
+    'schema field' => 'title',
   );
   $properties['location'] = array(
     'label' => 'Location',
-    'description' => t('The location of the scenario, relative to the Drupal base.'),
+    'description' => t('The location of the scenario, relative to the Drupal base, in the form of path/to/filename:line-number'),
     'type' => 'varchar',
     'schema field' => 'location',
   );
