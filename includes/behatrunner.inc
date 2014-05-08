@@ -97,6 +97,7 @@ function behatrunner_register_feature_scenarios($feature) {
 
   foreach ($scenarios as $scenario) {
     $data['title'] = $scenario->getTitle();
+    $data['feature'] = $scenario->getFeature();
     $data['location'] = $feature_location . ':' . $scenario->getLine();
     $data['module'] = $feature->drupalModule;
     $entity = entity_create('behatrunner_scenario', $data);
@@ -206,7 +207,6 @@ function behatrunner_deregister_scenario($bsid) {
   entity_delete('behatrunner_scenario', $bsid);
 }
 
-
 /**
  * De-registers all scenario registrations for a given module.
  *
@@ -221,37 +221,6 @@ function behatrunner_deregister_module_scenarios($module) {
   $entity_ids = array_keys($scenario_registrations);
 
   return entity_delete_multiple('behatrunner_scenario', $entity_ids);
-}
-
-
-/**
- * Retrieves all known test locations.
- *
- * @param array $scenarios
- *   An array of scenario ids.
- *
- * @return array
- *   An array of location objects.
- */
-function behatrunner_get_scenario_registrations($scenarios = array()) {
-  $registrations = &drupal_static(__FUNCTION__);
-
-  if (!isset($registrations)) {
-    $query = 'SELECT * FROM {behatrunner_scenario}';
-    $result = db_query($query);
-    $registrations = $result->fetchAllKeyed();
-  }
-
-  // If $scenarios has been specified, only return registrations for those.
-  if ($scenarios) {
-    $entity_ids = array();
-    foreach ($scenarios as $scenario) {
-      $entity_ids[] = $scenario->bsid;
-    }
-    $registrations = array_intersect_assoc($registrations, $scenarios);
-  }
-
-  return $registrations;
 }
 
 /**
@@ -313,10 +282,14 @@ function behatrunner_set_env_param($key, $value) {
  * @return string
  *   The command line output.
  */
-function behatrunner_execute_tests($scenarios = array(), $tags = array(), $formats = array('pretty')) {
+function behatrunner_execute_tests($scenarios = array(), $tags = array(), $formats = array()) {
   composer_manager_register_autoloader();
 
   $results = array();
+
+  if (!$formats) {
+    $formats = array('pretty', 'junit');
+  }
 
   // Construct tag filter params.
   $tags_string = '';
@@ -351,10 +324,18 @@ function behatrunner_execute_tests($scenarios = array(), $tags = array(), $forma
   $vendor = composer_manager_vendor_dir();
   $binary_path = $vendor . '/bin/behat';
 
-  $registrations = behatrunner_get_scenario_registrations($scenarios);
-  foreach ($registrations as $registration) {
-    $scenario_location = ' ' . DRUPAL_ROOT . '/' . $registration->location;
+  if (!$scenarios) {
+    $scenarios = entity_load('behatrunner_scenario');
+  }
+  foreach ($scenarios as $scenario) {
+    $scenario_location = ' ' . DRUPAL_ROOT . '/' . $scenario->location;
     $config_file = DRUPAL_ROOT . '/' . drupal_get_path('module', 'behatrunner') . '/behat.yml';
+
+    // If we're creating a result file, attempt to delete any previous copies.
+    if (!empty($out_dests['junit'])) {
+      list($scenario_file_path, $scenario_line) = explode(':', $scenario->location);
+      $result_file_location = $out_dests['junit'] . '/TEST-' . basename($scenario_file_path, '.feature') . '.xml';
+    }
 
     // Construct the command.
     $command = $binary_path;
@@ -363,14 +344,38 @@ function behatrunner_execute_tests($scenarios = array(), $tags = array(), $forma
     $command .= $out;
     $command .= $scenario_location;
     $command .= ' --config ' . $config_file;
-    drush_log("Executing $command");
+    //drush_log("Executing $command");
+    watchdog('debug', "Executing $command");
     // @todo: Replace exec() logic with direct PHP calls.
     $results .= shell_exec($command);
 
-    // @todo Allow optional insertion of results into db using data from
-    // junit output.
+    if (!empty($result_file_location)) {
+      $junit_result = behatrunner_parse_junit($result_file_location);
+      // @todo log to db is behatrunner_output varible = 'database'.
+      behatrunner_log_scenario_result($junit_result);
+    }
   }
 
   return $results;
 }
 
+/**
+ * Parses a Behat feature result in junit format to a PHP array.
+ *
+ * @param string $result_file_location
+ */
+function behatrunner_parse_junit($result_file_location) {
+  $data = file_get_contents($result_file_location);
+  $parser = drupal_xml_parser_create($data);
+  $xml = xml_parse($parser, $data);
+  // @todo parse this xml! There must be a library that already parses junit...
+  dpm($xml);
+}
+
+
+/**
+ * @param $result
+ */
+function behatrunner_log_scenario_result($junit_result) {
+  // @todo insert xml into {behatrunner_log}.
+}

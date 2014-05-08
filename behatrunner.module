@@ -16,17 +16,30 @@ function behatrunner_menu() {
     'page arguments' => array('behat_admin_form'),
     'access arguments' => array('administer behat runner'),
     'type' => MENU_DEFAULT_LOCAL_TASK,
+    'file' => drupal_get_path('module', 'behatrunner') . '/includes/behatrunner.admin.inc'
   );
 
   $items['admin/config/development/behatrunner/settings'] = array(
-    'title' => 'Configure Behat Runner',
+    'title' => 'Configuration',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('behat_admin_form'),
     'access arguments' => array('administer behat runner'),
     'type' => MENU_LOCAL_TASK,
+    'file' => drupal_get_path('module', 'behatrunner') . '/includes/behatrunner.admin.inc'
   );
 
   return $items;
+}
+
+/**
+ * Implements hook_views_api().
+ */
+function behatrunner_views_api() {
+  return array(
+    'api' => 3,
+    'path' => drupal_get_path('module', 'behatrunner') . '/includes/views',
+    'template path' => drupal_get_path('module', 'behatrunner') . '/themes',
+  );
 }
 
 /**
@@ -62,7 +75,7 @@ function behatrunner_action_info() {
  */
 function behatrunner_scenario_execute_action(&$entity, $context = array()) {
   if (!empty($entity->bsid)) {
-    module_load_include('inc', 'behatrunner');
+    module_load_include('inc', 'behatrunner', 'includes/behatrunner');
     behatrunner_execute_tests(array($entity));
   }
 }

@@ -99,7 +99,7 @@ function drush_behatrunner_behat_list_locations($arg1 = NULL) {
  *   The name of the module to register.
  */
 function drush_behatrunner_behat_register_modules($module = NULL) {
-  module_load_include('inc', 'behatrunner', 'behatrunner');
+  module_load_include('inc', 'behatrunner', 'includes/behatrunner');
 
   if (!$module) {
     behatrunner_discover_modules();
@@ -120,7 +120,7 @@ function drush_behatrunner_behat_run_tests() {
   }
 
   // TODO: Accept parameters.
-  module_load_include('inc', 'behatrunner', 'behatrunner');
+  module_load_include('inc', 'behatrunner', 'includes/behatrunner');
   $results = behatrunner_execute_tests(array(), array(), $formats);
   // TODO: Format output.
   drush_print($results);

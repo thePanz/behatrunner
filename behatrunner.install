@@ -22,6 +22,12 @@ function behatrunner_schema() {
         'unsigned' => TRUE,
         'not null' => TRUE,
       ),
+      'feature' => array(
+        'type' => 'varchar',
+        'length' => 256,
+        'not null' => FALSE,
+        'description' => 'The feature to which the Behat scenario belongs.',
+      ),
       'title' => array(
         'type' => 'varchar',
         'length' => 256,

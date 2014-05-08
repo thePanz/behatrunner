@@ -6,4 +6,4 @@ package = Development
 dependencies[] = entity
 dependencies[] = views
 
-files[] = BehatRunnerScenario.inc
+files[] = includes/BehatRunnerScenario.inc
