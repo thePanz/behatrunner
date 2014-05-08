@@ -4,10 +4,9 @@
  * Implements hook_install().
  */
 function behatrunner_install() {
-  module_load_include('inc', 'behatrunner');
+  module_load_include('inc', 'behatrunner', 'includes/behatrunner');
   behatrunner_discover_modules();
 }
-
 
 /**
  * Implements hook_schema().

@@ -285,8 +285,6 @@ function behatrunner_set_env_param($key, $value) {
 function behatrunner_execute_tests($scenarios = array(), $tags = array(), $formats = array()) {
   composer_manager_register_autoloader();
 
-  $results = array();
-
   if (!$formats) {
     $formats = array('pretty', 'junit');
   }
@@ -300,7 +298,6 @@ function behatrunner_execute_tests($scenarios = array(), $tags = array(), $forma
   }
 
   // Build an array of output destinations for each format.
-  // @todo use a variable_get() to determine default value for format(s).
   $out_dests = array();
   foreach ($formats as $format) {
     // Junit XML is output to file system.
@@ -344,8 +341,7 @@ function behatrunner_execute_tests($scenarios = array(), $tags = array(), $forma
     $command .= $out;
     $command .= $scenario_location;
     $command .= ' --config ' . $config_file;
-    //drush_log("Executing $command");
-    watchdog('debug', "Executing $command");
+
     // @todo: Replace exec() logic with direct PHP calls.
     $results .= shell_exec($command);
 
@@ -369,7 +365,6 @@ function behatrunner_parse_junit($result_file_location) {
   $parser = drupal_xml_parser_create($data);
   $xml = xml_parse($parser, $data);
   // @todo parse this xml! There must be a library that already parses junit...
-  dpm($xml);
 }
 
 
