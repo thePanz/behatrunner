@@ -4,7 +4,8 @@
  * Implements hook_install().
  */
 function behatrunner_install() {
-  behatrunner_register_location('behatrunner', 'features', TRUE);
+  module_load_include('inc', 'behatrunner');
+  behatrunner_discover_modules();
 }
 
 
@@ -21,11 +22,11 @@ function behatrunner_schema() {
         'unsigned' => TRUE,
         'not null' => TRUE,
       ),
-      'name' => array(
+      'title' => array(
         'type' => 'varchar',
         'length' => 256,
         'not null' => FALSE,
-        'description' => 'The name for this test location.',
+        'description' => 'The title of the Behat scenario.',
       ),
       'location' => array(
         'type' => 'varchar',
@@ -51,11 +52,11 @@ function behatrunner_schema() {
         'unsigned' => TRUE,
         'not null' => TRUE,
       ),
-      'name' => array(
-        'type' => 'varchar',
-        'length' => 256,
-        'not null' => FALSE,
-        'description' => 'The name of the scenario.',
+      'bsid' => array(
+        'description' => 'The foreign key of the Behat scenario.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
       ),
     ),
     'primary key' => array('blid'),

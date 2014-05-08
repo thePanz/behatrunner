@@ -7,11 +7,12 @@
 
 /**
  * Provides information about implementing module's behat features.
+ *
+ * The provided features path will be scanned for .feauture files, which will
+ * be registered by Behat Runner.
  */
 function hook_behat_info() {
-  $info = array();
-
-  $info['my_module_name'] = array(
+  $info = array(
     'paths' => array(
       // Specify the directory in which .feature files are located, relative
       // to the module directory.

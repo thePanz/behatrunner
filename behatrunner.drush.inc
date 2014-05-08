@@ -33,16 +33,16 @@ function behatrunner_drush_command() {
     ),
     'aliases' => array('bll'),
   );
-  $items['behat-register-module'] = array(
-    'description' => dt('Register Behat scenarios for a given module.'),
+  $items['behat-register-modules'] = array(
+    'description' => dt('Discover and register Behat scenarios. If no argument is specified, all discoverable modules will be registered.'),
     'arguments' => array(
-      'module' => 'Name of the module containing the scenarios. Required',
+      'module' => '(optional) Name of the module containing the scenarios to be registered.',
     ),
-    'required-arguments' => TRUE,
     'examples' => array(
-      'Standard example' => 'drush brm behatrunner',
+      'Discover and register' => 'drush brm',
+      'Register specific module' => 'drush brm behatrunner',
     ),
-    'aliases' => array('brm'),
+    'aliases' => array('br'),
   );
   $items['behat-run-tests'] = array(
     'description' => dt('Run the behat tests.'),
@@ -98,9 +98,15 @@ function drush_behatrunner_behat_list_locations($arg1 = NULL) {
  * @param string $module
  *   The name of the module to register.
  */
-function drush_behatrunner_behat_register_module($module) {
+function drush_behatrunner_behat_register_modules($module = NULL) {
   module_load_include('inc', 'behatrunner', 'behatrunner');
-  behatrunner_register_module($module);
+
+  if (!$module) {
+    behatrunner_discover_modules();
+  }
+  else {
+    behatrunner_register_module($module);
+  }
 }
 
 /**

@@ -17,7 +17,7 @@ class BehatRunnerScenario extends Entity {
    *   behatrunner_test_location btid
    */
   protected function defaultLabel() {
-    return $this->btid;
+    return $this->title;
   }
 
   /**

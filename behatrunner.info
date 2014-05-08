@@ -2,7 +2,7 @@ name = Behat Runner
 core = 7.x
 package = Development
 
-dependencies[] = composer_manager
+;dependencies[] = composer_manager
 dependencies[] = entity
 dependencies[] = views
 

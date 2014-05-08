@@ -5,6 +5,69 @@
  */
 
 /**
+ * Implements hook_menu().
+ */
+function behatrunner_menu() {
+  $items = array();
+
+  $items['admin/config/development/behatrunner'] = array(
+    'title' => 'Configure Behat Runner',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('behat_admin_form'),
+    'access arguments' => array('administer behat runner'),
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+  );
+
+  $items['admin/config/development/behatrunner/settings'] = array(
+    'title' => 'Configure Behat Runner',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('behat_admin_form'),
+    'access arguments' => array('administer behat runner'),
+    'type' => MENU_LOCAL_TASK,
+  );
+
+  return $items;
+}
+
+/**
+ * Implements hook_behat_info().
+ */
+function behatrunner_behat_info() {
+  $info = array(
+    'paths' => array(
+      // Specify the directory in which .feature files are located, relative
+      // to the module directory.
+      'features' => 'features',
+    ),
+  );
+
+  return $info;
+}
+
+/**
+ * Implements hook_action_info().
+ */
+function behatrunner_action_info() {
+  return array(
+    'behatrunner_scenario_execute_action' => array(
+      'type' => 'behatrunner_scenario',
+      'label' => t('Test scenario'),
+      'configurable' => FALSE,
+    ),
+  );
+}
+
+/**
+ * Callback for "Test scenario" aciton.
+ */
+function behatrunner_scenario_execute_action(&$entity, $context = array()) {
+  if (!empty($entity->bsid)) {
+    module_load_include('inc', 'behatrunner');
+    behatrunner_execute_tests(array($entity));
+  }
+}
+
+/**
  * Implements hook_entity_info().
  */
 function behatrunner_entity_info() {
@@ -74,10 +137,14 @@ function behatrunner_permission() {
       'description' => t('Allows users to view behat scenario.'),
       'restrict access' => TRUE,
     ),
+    'administer behat runner' => array(
+      'title' => t('Administer Behat Runner'),
+      'description' => t('Grants all permission for behat runner.'),
+      'restrict access' => TRUE,
+    ),
   );
   return $permissions;
 }
-
 
 /**
  * Access callback.
