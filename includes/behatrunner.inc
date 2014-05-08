@@ -31,7 +31,7 @@ function behatrunner_discover_modules() {
   }
 }
 
-/*
+/**
  * Registers the locations of all scenarios for a given module.
  *
  * @param string $module
@@ -70,7 +70,7 @@ function behatrunner_discover_module_features($module) {
     $features_path = $behat_info[$module]['']['features'];
   }
 
-  $system_path = DRUPAL_ROOT . '/' . drupal_get_path('module', $module) . '/' . $features_path;
+  $system_path = DRUPAL_ROOT . '/' . drupal_get_path('module', $module) . $features_path;
   $feature_files = file_scan_directory($system_path, '/.*\.feature$/', array('recurse' => TRUE));
   $parser = behatrunner_get_parser();
 
@@ -97,6 +97,7 @@ function behatrunner_register_feature_scenarios($feature) {
 
   foreach ($scenarios as $scenario) {
     $data['title'] = $scenario->getTitle();
+    // @todo Figure out why this isn't getting the feature!
     $data['feature'] = $scenario->getFeature();
     $data['location'] = $feature_location . ':' . $scenario->getLine();
     $data['module'] = $feature->drupalModule;
@@ -347,8 +348,9 @@ function behatrunner_execute_tests($scenarios = array(), $tags = array(), $forma
 
     if (!empty($result_file_location)) {
       $junit_result = behatrunner_parse_junit($result_file_location);
-      // @todo log to db is behatrunner_output varible = 'database'.
-      behatrunner_log_scenario_result($junit_result);
+      if (variable_get('behatrunner_log', 'database_files')) {
+        behatrunner_log_scenario_result($junit_result);
+      }
     }
   }
 
@@ -366,7 +368,6 @@ function behatrunner_parse_junit($result_file_location) {
   $xml = xml_parse($parser, $data);
   // @todo parse this xml! There must be a library that already parses junit...
 }
-
 
 /**
  * @param $result

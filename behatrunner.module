@@ -16,16 +16,16 @@ function behatrunner_menu() {
     'page arguments' => array('behat_admin_form'),
     'access arguments' => array('administer behat runner'),
     'type' => MENU_DEFAULT_LOCAL_TASK,
-    'file' => drupal_get_path('module', 'behatrunner') . '/includes/behatrunner.admin.inc'
+    'file' => '/includes/behatrunner.admin.inc',
   );
 
   $items['admin/config/development/behatrunner/settings'] = array(
     'title' => 'Configuration',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('behat_admin_form'),
+    'page arguments' => array('behatrunner_admin_form'),
     'access arguments' => array('administer behat runner'),
     'type' => MENU_LOCAL_TASK,
-    'file' => drupal_get_path('module', 'behatrunner') . '/includes/behatrunner.admin.inc'
+    'file' => '/includes/behatrunner.admin.inc',
   );
 
   return $items;

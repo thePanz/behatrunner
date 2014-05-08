@@ -26,12 +26,12 @@ function behatrunner_drush_command() {
     ),
     'aliases' => array('br'),
   );
-  $items['behat-list-locations'] = array(
-    'description' => dt('List registered Behat test locations.'),
+  $items['behat-list-scenarios'] = array(
+    'description' => dt('List registered Behat scenarios.'),
     'examples' => array(
-      'Standard example' => 'drush behat-list-locations',
+      'Standard example' => 'drush behat-list-scenarios',
     ),
-    'aliases' => array('bll'),
+    'aliases' => array('bls'),
   );
   $items['behat-register-modules'] = array(
     'description' => dt('Discover and register Behat scenarios. If no argument is specified, all discoverable modules will be registered.'),
@@ -42,7 +42,7 @@ function behatrunner_drush_command() {
       'Discover and register' => 'drush brm',
       'Register specific module' => 'drush brm behatrunner',
     ),
-    'aliases' => array('br'),
+    'aliases' => array('brm'),
   );
   $items['behat-run-tests'] = array(
     'description' => dt('Run the behat tests.'),
@@ -60,7 +60,6 @@ function behatrunner_drush_command() {
   return $items;
 }
 
-
 /**
  * Run Behat tests.
  */
@@ -68,22 +67,21 @@ function drush_behatrunner_behatrun($arg1 = NULL) {
   // TODO:
 }
 
-
 /**
  * List known test locations.
  */
-function drush_behatrunner_behat_list_locations($arg1 = NULL) {
-  $registrations = behatrunner_get_test_locations();
+function drush_behatrunner_behat_list_scenarios() {
+  $scenarios = entity_load('behatrunner_scenario');
 
-  if ($registrations) {
+  if ($scenarios) {
     $table = array();
-    $table[] = array(t('Name'), t('Module'), t('Location'));
+    $table[] = array(t('Title'), t('Module'), t('Location'));
     $table[] = array('-----------', '-----------', '-----------');
-    foreach ($registrations as $registration) {
+    foreach ($scenarios as $scenario) {
       $table[] = array(
-        $registration->name,
-        $registration->module,
-        $registration->location);
+        $scenario->title,
+        $scenario->module,
+        $scenario->location);
     }
     drush_print_table($table);
   }
@@ -114,7 +112,6 @@ function drush_behatrunner_behat_register_modules($module = NULL) {
  */
 function drush_behatrunner_behat_run_tests() {
   $formats = array();
-  // @todo use a variable_get() to determine default value for format(s).
   if ($formats_option = drush_get_option('formats', 'pretty')) {
     $formats = explode(',', $formats_option);
   }
