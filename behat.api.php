@@ -22,3 +22,12 @@ function hook_behat_info() {
 
   return $info;
 }
+
+/**
+ * Allows behat info to be altered.
+ */
+function hook_behat_info_alter(&$alter) {
+  $info['mymodule']['paths']['features'] = '/some/new/path';
+
+  return $info;
+}
