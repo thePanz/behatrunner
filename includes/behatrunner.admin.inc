@@ -16,10 +16,10 @@ function behatrunner_admin_form($form_state) {
     '#title' => t('Log destination'),
     '#description' => t('Outputting to the Drupal database allows tests results to be viewed via Views.'),
     '#options' => array(
-      'database_files' => t('Drupal database and file system'),
-      'files' => t('File system'),
+      'filesystem_database' => t('Drupal database and file system'),
+      'filesystem' => t('File system'),
     ),
-    '#default_value' => variable_get('behatrunner_format', 'database_files'),
+    '#default_value' => variable_get('behatrunner_format', 'filesystem_database'),
     '#required' => TRUE,
   );
 

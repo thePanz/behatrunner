@@ -347,9 +347,11 @@ function behatrunner_execute_tests($scenarios = array(), $tags = array(), $forma
     $results .= shell_exec($command);
 
     if (!empty($result_file_location)) {
-      $junit_result = behatrunner_parse_junit($result_file_location);
-      if (variable_get('behatrunner_log', 'database_files')) {
-        behatrunner_log_scenario_result($junit_result);
+      if (variable_get('behatrunner_log', 'filesystem_database')) {
+        // Log results to database.
+        $junit_result = behatrunner_parse_junit($result_file_location);
+        // @todo Complete logging function.
+        //behatrunner_log_scenario_result($junit_result);
       }
     }
   }
@@ -361,17 +363,60 @@ function behatrunner_execute_tests($scenarios = array(), $tags = array(), $forma
  * Parses a Behat feature result in junit format to a PHP array.
  *
  * @param string $result_file_location
+ *   The system path of the junit result file.
+ *
+ * @return array
+ *   An array of the parsed junit result xml.
  */
 function behatrunner_parse_junit($result_file_location) {
-  $data = file_get_contents($result_file_location);
-  $parser = drupal_xml_parser_create($data);
-  $xml = xml_parse($parser, $data);
-  // @todo parse this xml! There must be a library that already parses junit...
+  $xml = simplexml_load_file($result_file_location);
+  $attributes = (array) $xml->testcase->attributes();
+  $result = $attributes['@attributes'];
+
+  return $result;
 }
 
 /**
- * @param $result
+ * Saves results from Behat scenario runs to the database.
+ *
+ * @param array $junit_results
+ *   The parsed junit result xml.
  */
-function behatrunner_log_scenario_result($junit_result) {
-  // @todo insert xml into {behatrunner_log}.
+function behatrunner_log_scenario_result($junit_results) {
+  $scenarios = entity_load('behatrunner_scenario');
+
+  // We need to key the entities by their title because the junit results are
+  // keyed by title.
+  $scenarios_by_title = array();
+  foreach ($scenarios as $scenario) {
+    $scenarios_by_title[$scenario->title] = $scenario;
+  }
+
+  foreach ($junit_results as $junit_result) {
+    // Select scenario for this junit result.
+    $scenario = $scenarios_by_title[$junit_result->title];
+
+    // Delete log entries for previous runs for this scenario.
+    $num_deleted = db_delete('behatrunner_log')
+      ->condition('bsid', $scenario->bsid)
+      ->execute();
+
+    $values = array(
+      'bsid' => $scenario->bsid,
+      'time' => '',
+      'assertions' => '',
+      'message' => '',
+      'status' => '',
+      'timestamp' => REQUEST_TIME,
+    );
+
+    // Insert new log entry for current run of this Behat scenario.
+    $blid = db_insert('behatrunner_log')
+      ->fields($values)
+      ->execute();
+
+    // Update scenario entity with the id of the new log entry.
+    $scenario->blid = $blid;
+    // @todo save entity with new blid.
+  }
 }

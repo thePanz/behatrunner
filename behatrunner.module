@@ -12,20 +12,21 @@ function behatrunner_menu() {
 
   $items['admin/config/development/behatrunner'] = array(
     'title' => 'Configure Behat Runner',
+    'description' => 'Configure Behat Runner settings.',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('behat_admin_form'),
+    'page arguments' => array('behatrunner_admin_form'),
     'access arguments' => array('administer behat runner'),
-    'type' => MENU_DEFAULT_LOCAL_TASK,
     'file' => '/includes/behatrunner.admin.inc',
   );
 
   $items['admin/config/development/behatrunner/settings'] = array(
     'title' => 'Configuration',
+    'description' => 'Configure Behat Runner settings.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('behatrunner_admin_form'),
     'access arguments' => array('administer behat runner'),
-    'type' => MENU_LOCAL_TASK,
     'file' => '/includes/behatrunner.admin.inc',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
   );
 
   return $items;

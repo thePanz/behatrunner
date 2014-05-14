@@ -19,13 +19,7 @@ function behatrunner_drush_help($command) {
  */
 function behatrunner_drush_command() {
   $items = array();
-  $items['behat-run'] = array(
-    'description' => dt('Run Behat tests.'),
-    'examples' => array(
-      'Standard example' => 'drush behat-run',
-    ),
-    'aliases' => array('br'),
-  );
+
   $items['behat-list-scenarios'] = array(
     'description' => dt('List registered Behat scenarios.'),
     'examples' => array(
@@ -58,13 +52,6 @@ function behatrunner_drush_command() {
     'aliases' => array('brun'),
   );
   return $items;
-}
-
-/**
- * Run Behat tests.
- */
-function drush_behatrunner_behatrun($arg1 = NULL) {
-  // TODO:
 }
 
 /**
@@ -112,7 +99,7 @@ function drush_behatrunner_behat_register_modules($module = NULL) {
  */
 function drush_behatrunner_behat_run_tests() {
   $formats = array();
-  if ($formats_option = drush_get_option('formats', 'pretty')) {
+  if ($formats_option = drush_get_option('formats', 'pretty,junit')) {
     $formats = explode(',', $formats_option);
   }
 
