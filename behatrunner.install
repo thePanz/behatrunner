@@ -1,14 +1,6 @@
 <?php
 
 /**
- * Implements hook_install().
- */
-function behatrunner_install() {
-  module_load_include('inc', 'behatrunner', 'includes/behatrunner');
-  behatrunner_discover_modules();
-}
-
-/**
  * Implements hook_schema().
  */
 function behatrunner_schema() {
@@ -106,3 +98,5 @@ function behatrunner_schema() {
 
   return $schema;
 }
+
+// @todo Implement hook_requirements(), require libraries in composer.json.
