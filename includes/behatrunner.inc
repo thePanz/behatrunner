@@ -67,7 +67,7 @@ function behatrunner_discover_module_features($module) {
   // Allow modules to specify a custom path for their features directory.
   $behat_info = behatrunner_get_behat_info();
   if (!empty($behat_info[$module]['paths']['features'])) {
-    $features_path = $behat_info[$module]['']['features'];
+    $features_path = $behat_info[$module]['paths']['features'];
   }
 
   $system_path = DRUPAL_ROOT . '/' . drupal_get_path('module', $module) . $features_path;
