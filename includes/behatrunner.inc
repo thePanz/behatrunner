@@ -98,7 +98,7 @@ function behatrunner_register_feature_scenarios($feature) {
   foreach ($scenarios as $scenario) {
     $data['title'] = $scenario->getTitle();
     // @todo Figure out why this isn't getting the feature!
-    $data['feature'] = $scenario->getFeature();
+    $data['feature'] = $scenario->getFeature()->getTitle();
     $data['location'] = $feature_location . ':' . $scenario->getLine();
     $data['module'] = $feature->drupalModule;
     $entity = entity_create('behatrunner_scenario', $data);
