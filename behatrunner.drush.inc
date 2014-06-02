@@ -94,10 +94,18 @@ function drush_behatrunner_behat_register_modules($module = NULL) {
   }
 }
 
+
 /**
  * Run behat tests.
  */
 function drush_behatrunner_behat_run_tests() {
+  module_load_include('inc', 'behatrunner', 'includes/behatrunner');
+
+  // If there are no registrations, run auto discovery
+  if (!behatrunner_scenarios_exist()) {
+    behatrunner_discover_modules();
+  }
+
   $formats = array();
   if ($formats_option = drush_get_option('formats', 'pretty,junit')) {
     $formats = explode(',', $formats_option);

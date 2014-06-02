@@ -1,5 +1,49 @@
 <?php
 
+use Symfony\Component\Yaml\Parser;
+use Symfony\Component\Yaml\Dumper;
+
+/**
+ * Implements hook_install().
+ */
+function behatrunner_install() {
+  drush_print_r("Increasing memory to 768M");
+  if (drupal_is_cli()) { ini_set('memory_limit', '768M'); }
+}
+
+
+/**
+ * Implements hook_composer_manager_dependencies_install().
+ *   This will get called on install, but after composer_manager
+ *   has finished installing all composer dependencies.
+ */
+function behatrunner_composer_manager_install() {
+  module_load_include('inc', 'behatrunner', 'includes/behatrunner');
+  composer_manager_register_autoloader();
+
+  global $base_url;
+  $filename = drupal_get_path('module', 'behatrunner') . '/default.behat.yml';
+
+  // Load default behat.yml configuration.
+  $parser = new Symfony\Component\Yaml\Parser();
+  $behat_conf = $parser->parse(file_get_contents($filename));
+
+  // Modify configuration.
+  $behat_conf['default']['extensions']['Behat\MinkExtension\Extension']['base_url'] = $base_url;
+  $behat_conf['default']['extensions']['Drupal\DrupalExtension\Extension']['drupal']['drupal_root'] = DRUPAL_ROOT;
+
+  // Write to file.
+  $dumper = new Symfony\Component\Yaml\Dumper();
+  $dumper->setIndentation(2);
+  $yaml = $dumper->dump($behat_conf, PHP_INT_MAX);
+  $dest_dir = 'public://behatrunner';
+  $output_dir = file_prepare_directory($dest_dir, FILE_CREATE_DIRECTORY);
+  $destination = 'public://behatrunner/behat.yml';
+
+  file_unmanaged_save_data($yaml, $destination, FILE_EXISTS_RENAME);
+}
+
+
 /**
  * Implements hook_schema().
  */

@@ -70,7 +70,7 @@ function behatrunner_discover_module_features($module) {
     $features_path = $behat_info[$module]['paths']['features'];
   }
 
-  $system_path = DRUPAL_ROOT . '/' . drupal_get_path('module', $module) . $features_path;
+  $system_path = DRUPAL_ROOT . '/' . drupal_get_path('module', $module) . '/' . $features_path;
   $feature_files = file_scan_directory($system_path, '/.*\.feature$/', array('recurse' => TRUE));
   $parser = behatrunner_get_parser();
 
@@ -303,7 +303,7 @@ function behatrunner_execute_tests($scenarios = array(), $tags = array(), $forma
   foreach ($formats as $format) {
     // Junit XML is output to file system.
     if ($format == 'junit') {
-      $dest_dir = 'public://behat';
+      $dest_dir = 'public://behatrunner';
       $output_dir = file_prepare_directory($dest_dir, FILE_CREATE_DIRECTORY);
       $wrapper = file_stream_wrapper_get_instance_by_uri($dest_dir);
       $output_dest = $wrapper->realpath();
@@ -327,7 +327,7 @@ function behatrunner_execute_tests($scenarios = array(), $tags = array(), $forma
   }
   foreach ($scenarios as $scenario) {
     $scenario_location = ' ' . DRUPAL_ROOT . '/' . $scenario->location;
-    $config_file = DRUPAL_ROOT . '/' . drupal_get_path('module', 'behatrunner') . '/behat.yml';
+    $config_file = drupal_realpath('public://behatrunner/behat.yml');
 
     // If we're creating a result file, attempt to delete any previous copies.
     if (!empty($out_dests['junit'])) {
@@ -343,13 +343,20 @@ function behatrunner_execute_tests($scenarios = array(), $tags = array(), $forma
     $command .= $scenario_location;
     $command .= ' --config ' . $config_file;
 
+
+
+    $features_path = behatrunner_module_features_path($scenario->module);
+    // @todo Replace with implementation of behat_set_env_params().
+    //behat_set_env_param('paths[features]', $features_path);
+    putenv("BEHAT_PARAMS=paths[features]=$features_path");
+
     // @todo: Replace exec() logic with direct PHP calls.
     $results .= shell_exec($command);
 
     if (!empty($result_file_location)) {
       if (variable_get('behatrunner_log', 'filesystem_database')) {
         // Log results to database.
-        $junit_result = behatrunner_parse_junit($result_file_location);
+        // $junit_result = behatrunner_parse_junit($result_file_location);
         // @todo Complete logging function.
         //behatrunner_log_scenario_result($junit_result);
       }
@@ -419,4 +426,42 @@ function behatrunner_log_scenario_result($junit_results) {
     $scenario->blid = $blid;
     // @todo save entity with new blid.
   }
+}
+
+
+/**
+ * Determine if there are any scenarios registered in the database
+ *
+ * @return boolean
+ */
+function behatrunner_scenarios_exist() {
+
+  // Check if there are any registrations
+  $query = 'SELECT bsid FROM {behatrunner_scenario} LIMIT 1';
+  $result = db_query($query);
+  $record = $result->fetchObject();
+
+  return (bool) $record;
+}
+
+
+/**
+ * Returns the system file path for a given module's Behat features.
+ *
+ * @param string $module
+ *   The module for which to find the features system path.
+ *
+ * @return string
+ *   The system path for the module's Behat features directory.
+ */
+function behatrunner_module_features_path($module) {
+  $features_path = 'features';
+  // Allow modules to specify a custom path for their features directory.
+  $behat_info = behatrunner_get_behat_info();
+  if (!empty($behat_info[$module]['paths']['features'])) {
+    $features_path = $behat_info[$module]['paths']['features'];
+  }
+
+  $system_path = DRUPAL_ROOT . '/' . drupal_get_path('module', $module) . '/' . $features_path;
+  return $system_path;
 }
