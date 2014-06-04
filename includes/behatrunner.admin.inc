@@ -19,7 +19,7 @@ function behatrunner_admin_form($form_state) {
       'filesystem_database' => t('Drupal database and file system'),
       'filesystem' => t('File system'),
     ),
-    '#default_value' => variable_get('behatrunner_format', 'filesystem_database'),
+    '#default_value' => variable_get('behatrunner_log', 'filesystem_database'),
     '#required' => TRUE,
   );
 
