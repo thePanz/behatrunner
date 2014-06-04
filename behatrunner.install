@@ -13,11 +13,11 @@ function behatrunner_install() {
 
 
 /**
- * Implements hook_composer_manager_dependencies_install().
+ * Implements hook_composer_dependencies_install().
  *   This will get called on install, but after composer_manager
  *   has finished installing all composer dependencies.
  */
-function behatrunner_composer_manager_install() {
+function behatrunner_composer_dependencies_install() {
   module_load_include('inc', 'behatrunner', 'includes/behatrunner');
   composer_manager_register_autoloader();
 
