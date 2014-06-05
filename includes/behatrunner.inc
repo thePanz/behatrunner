@@ -354,11 +354,11 @@ function behatrunner_execute_tests($scenarios = array(), $tags = array(), $forma
     $results .= shell_exec($command);
 
     if (!empty($result_file_location)) {
-      if (variable_get('behatrunner_log', 'filesystem_database')) {
+      if (variable_get('behatrunner_log', 'filesystem_database') == "filesystem_database") {
         // Log results to database.
-        // $junit_result = behatrunner_parse_junit($result_file_location);
+        $junit_result = behatrunner_parse_junit($result_file_location);
         // @todo Complete logging function.
-        //behatrunner_log_scenario_result($junit_result);
+        behatrunner_log_scenario_result($junit_result);
       }
     }
   }
@@ -379,6 +379,9 @@ function behatrunner_parse_junit($result_file_location) {
   $xml = simplexml_load_file($result_file_location);
   $attributes = (array) $xml->testcase->attributes();
   $result = $attributes['@attributes'];
+  $failure = (array) $xml->testcase->failure->attributes();
+  $result['message'] = ($failure ? $failure['@attributes']['message'] : '');
+  $result['status'] = ($failure ? 1 : 0);
 
   return $result;
 }
@@ -399,21 +402,17 @@ function behatrunner_log_scenario_result($junit_results) {
     $scenarios_by_title[$scenario->title] = $scenario;
   }
 
-  foreach ($junit_results as $junit_result) {
-    // Select scenario for this junit result.
-    $scenario = $scenarios_by_title[$junit_result->title];
-
     // Delete log entries for previous runs for this scenario.
     $num_deleted = db_delete('behatrunner_log')
-      ->condition('bsid', $scenario->bsid)
+      ->condition('bsid', $junit_results->bsid)
       ->execute();
 
     $values = array(
-      'bsid' => $scenario->bsid,
-      'time' => '',
-      'assertions' => '',
-      'message' => '',
-      'status' => '',
+      'bsid' => 1,
+      'duration' => $junit_results['time'],
+      'assertions' => $junit_results['assertions'],
+      'message' => $junit_results['message'],
+      'status' => $junit_results['status'],
       'timestamp' => REQUEST_TIME,
     );
 
@@ -424,8 +423,8 @@ function behatrunner_log_scenario_result($junit_results) {
 
     // Update scenario entity with the id of the new log entry.
     $scenario->blid = $blid;
-    // @todo save entity with new blid.
-  }
+    //@todo save entity with new blid.
+
 }
 
 
