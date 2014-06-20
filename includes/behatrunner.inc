@@ -6,29 +6,23 @@
  */
 
 /**
- * Aggregates information provided by implementations of hook_behat_info().
- */
-function behatrunner_get_behat_info() {
-  $info = array();
-  foreach (module_implements('behat_info') as $module) {
-    $function = $module . '_behat_info';
-    $info[$module] = $function();
-  }
-
-  drupal_alter('behat_info', $info);
-
-  return $info;
-}
-
-/**
  * Discovers and registers all modules implementing hook_behat_info().
+ *
+ * @return array
+ *   An array of the modules that were discovered.
  */
 function behatrunner_discover_modules() {
-  $behat_info = behatrunner_get_behat_info();
+  $modules = module_list();
 
-  foreach ($behat_info as $module => $module_info) {
-    behatrunner_register_module($module);
+  $discovered = array();
+  foreach ($modules as $module) {
+    $registered = behatrunner_register_module($module);
+    if ($registered) {
+      $discovered[] = $module;
+    }
   }
+
+  return $discovered;
 }
 
 /**
@@ -36,6 +30,9 @@ function behatrunner_discover_modules() {
  *
  * @param string $module
  *   The machine name of a module.
+ *
+ * @return bool
+ *   TRUE is the module contained features to register.
  */
 function behatrunner_register_module($module) {
   $registered = behatrunner_module_is_registered($module);
@@ -50,6 +47,8 @@ function behatrunner_register_module($module) {
     // Register all scenarios for each feature.
     $status = behatrunner_register_feature_scenarios($feature);
   }
+
+  return (bool) $features;
 }
 
 /**
@@ -62,15 +61,7 @@ function behatrunner_register_module($module) {
  *   An associative array of features, keyed by filename.
  */
 function behatrunner_discover_module_features($module) {
-  $features_path = 'features';
-
-  // Allow modules to specify a custom path for their features directory.
-  $behat_info = behatrunner_get_behat_info();
-  if (!empty($behat_info[$module]['paths']['features'])) {
-    $features_path = $behat_info[$module]['paths']['features'];
-  }
-
-  $system_path = DRUPAL_ROOT . '/' . drupal_get_path('module', $module) . '/' . $features_path;
+  $system_path = behatrunner_module_features_path($module);
   $feature_files = file_scan_directory($system_path, '/.*\.feature$/', array('recurse' => TRUE));
   $parser = behatrunner_get_parser();
 
@@ -514,14 +505,8 @@ function behatrunner_scenarios_exist() {
  *   The system path for the module's Behat features directory.
  */
 function behatrunner_module_features_path($module) {
-  $features_path = 'features';
-  // Allow modules to specify a custom path for their features directory.
-  $behat_info = behatrunner_get_behat_info();
-  if (!empty($behat_info[$module]['paths']['features'])) {
-    $features_path = $behat_info[$module]['paths']['features'];
-  }
+  $system_path = DRUPAL_ROOT . '/' . drupal_get_path('module', $module) . '/features';
 
-  $system_path = DRUPAL_ROOT . '/' . drupal_get_path('module', $module) . '/' . $features_path;
   return $system_path;
 }
 
