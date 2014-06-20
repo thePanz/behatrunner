@@ -343,8 +343,6 @@ function behatrunner_execute_tests($scenarios = array(), $tags = array(), $forma
     $command .= $scenario_location;
     $command .= ' --config ' . $config_file;
 
-
-
     $features_path = behatrunner_module_features_path($scenario->module);
     // @todo Replace with implementation of behat_set_env_params().
     //behat_set_env_param('paths[features]', $features_path);
@@ -379,7 +377,7 @@ function behatrunner_parse_junit($result_file_location) {
   $xml = simplexml_load_file($result_file_location);
   $attributes = (array) $xml->testcase->attributes();
   $result = $attributes['@attributes'];
-  $failure = (array) $xml->testcase->failure->attributes();
+  $failure = (array) $xml->testcase->failure && $xml->testcase->failure->attributes();
   $result['message'] = ($failure ? $failure['@attributes']['message'] : '');
   $result['status'] = ($failure ? 1 : 0);
 
@@ -422,11 +420,9 @@ function behatrunner_log_scenario_result($junit_results) {
       ->execute();
 
     // Update scenario entity with the id of the new log entry.
-    $scenario->blid = $blid;
+    // $scenario->blid = $blid;
     //@todo save entity with new blid.
-
 }
-
 
 /**
  * Determine if there are any scenarios registered in the database
@@ -442,7 +438,6 @@ function behatrunner_scenarios_exist() {
 
   return (bool) $record;
 }
-
 
 /**
  * Returns the system file path for a given module's Behat features.
