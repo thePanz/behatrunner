@@ -285,40 +285,12 @@ function behatrunner_set_env_param($key, $value) {
  */
 function behatrunner_execute_tests($scenarios = array(), $tags = array(), $formats = array()) {
   composer_manager_register_autoloader();
-
-  if (!$formats) {
-    $formats = array('pretty', 'junit');
-  }
-
-  // Construct tag filter params.
-  $tags_string = '';
-  if (count($tags) > 0) {
-    $tags_string = ' --tags "~@';
-    $tags_string .= implode($tags, '&&@');
-    $tags_string .= '"';
-  }
-
-  // Build an array of output destinations for each format.
-  $out_dests = array();
-  foreach ($formats as $format) {
-    // Junit XML is output to file system.
-    if ($format == 'junit') {
-      $dest_dir = 'public://behatrunner';
-      $output_dir = file_prepare_directory($dest_dir, FILE_CREATE_DIRECTORY);
-      $wrapper = file_stream_wrapper_get_instance_by_uri($dest_dir);
-      $output_dest = $wrapper->realpath();
-      $out_dests[$format] = $output_dest;
-    }
-    // Other formats are written to stdout.
-    else {
-      $out_dests[$format] = '';
-    }
-  }
-
-  $formats = ' --format="' . implode(',', $formats) . '"';
-  $out = ' --out="' . implode(',', $out_dests) . ',"';
-
   $results = '';
+
+  $tags = behat_tags_argument_build($tags);
+  $formats = behat_format_arguments_build($formats);
+  $config = behat_config_argument_build();
+
   $vendor = composer_manager_vendor_dir();
   $binary_path = $vendor . '/bin/behat';
 
@@ -327,29 +299,23 @@ function behatrunner_execute_tests($scenarios = array(), $tags = array(), $forma
   }
   foreach ($scenarios as $scenario) {
     $scenario_location = ' ' . DRUPAL_ROOT . '/' . $scenario->location;
-    $config_file = drupal_realpath('public://behatrunner/behat.yml');
-
-    // If we're creating a result file, attempt to delete any previous copies.
-    if (!empty($out_dests['junit'])) {
-      list($scenario_file_path, $scenario_line) = explode(':', $scenario->location);
-      $result_file_location = $out_dests['junit'] . '/TEST-' . basename($scenario_file_path, '.feature') . '.xml';
-    }
+    $features_path = behatrunner_module_features_path($scenario->module);
+    $bootstrap_path = behat_module_bootstrap_path($scenario->module);
 
     // Construct the command.
-    $command = $binary_path;
-    $command .= $tags_string;
-    $command .= $formats;
-    $command .= $out;
-    $command .= $scenario_location;
-    $command .= ' --config ' . $config_file;
+    $command = array(
+      $binary_path,
+      $formats,
+      $scenario_location,
+      $config,
+    );
 
-    $features_path = behatrunner_module_features_path($scenario->module);
-    // @todo Replace with implementation of behat_set_env_params().
+    // @todo Replace with implementation of behat_set_env_params(). We should
+    // not overwrite the entire BEHAT_PARAMS variable, only a specific key.
     //behat_set_env_param('paths[features]', $features_path);
-    putenv("BEHAT_PARAMS=paths[features]=$features_path");
+    putenv("BEHAT_PARAMS=paths[features]=$features_path&paths[bootstrap]=$bootstrap_path");
 
-    // @todo: Replace exec() logic with direct PHP calls.
-    $results .= shell_exec($command);
+    $results .= behat_execute_tests_command($command);
 
     if (!empty($result_file_location)) {
       if (variable_get('behatrunner_log', 'filesystem_database') == "filesystem_database") {
@@ -362,6 +328,96 @@ function behatrunner_execute_tests($scenarios = array(), $tags = array(), $forma
   }
 
   return $results;
+}
+
+/**
+ * Builds the --formats and --out arguments for the behat command.
+ *
+ * @param array $formats
+ *
+ * @return string
+ */
+function behat_format_arguments_build($formats) {
+  if (!$formats) {
+    $formats = array('progress', 'junit');
+  }
+
+  // Build an array of output destinations for each format.
+  $out_dests = array();
+  foreach ($formats as $format) {
+    // Junit XML is output to file system.
+    if ($format == 'junit') {
+      $dest_dir = 'public://behat';
+      $output_dir = file_prepare_directory($dest_dir, FILE_CREATE_DIRECTORY);
+      $wrapper = file_stream_wrapper_get_instance_by_uri($dest_dir);
+      $output_dest = $wrapper->realpath();
+      $out_dests[$format] = $output_dest;
+    }
+    // Other formats are written to stdout.
+    else {
+      $out_dests[$format] = '';
+    }
+  }
+
+  $formats = '-f ' . implode(',', $formats);
+  $out = "--out='" . implode(',', $out_dests) . ",'";
+
+  return $formats . ' ' . $out;
+}
+
+/**
+ * Builds the --tags argument for the behat command.
+ *
+ * @param array $tags
+ *   An array of behat tags.
+ *
+ * @return string
+ *   The --tags argument. E.g., "--tags=@sometag".
+ *
+ * @todo Refactor this, it doesn't really work!
+ */
+function behat_tags_argument_build($tags) {
+  $tags_string = '';
+  if (count($tags) > 0) {
+    $tags_string = ' --tags "~@';
+    $tags_string .= implode($tags, '&&@');
+    $tags_string .= '"';
+  }
+
+  return $tags_string;
+}
+
+/**
+ * Builds the --config argument for the behat command.
+ *
+ * @return string
+ */
+function behat_config_argument_build() {
+  $config_file = drupal_realpath('public://behatrunner/behat.yml');
+
+  return '--config  ' . $config_file;
+}
+
+/**
+ * @param $command
+ * @return string
+ */
+function behat_execute_tests_command($command) {
+
+  $command = implode(' ', $command);
+  $process = new \Symfony\Component\Process\Process($command);
+  $process->run(function ($type, $buffer) {
+    print $buffer;
+  });
+
+  if (!$process->isSuccessful()) {
+    $output = $process->getErrorOutput();
+  }
+  else {
+    $output = $process->getOutput();
+  }
+
+  return $output;
 }
 
 /**
@@ -457,5 +513,28 @@ function behatrunner_module_features_path($module) {
   }
 
   $system_path = DRUPAL_ROOT . '/' . drupal_get_path('module', $module) . '/' . $features_path;
+  return $system_path;
+}
+
+
+/**
+ * Returns the system file path for a given module's bootstrap directory.
+ *
+ * The bootstrap directory must contain a FeatureContext.php class.
+ *
+ * @param string $module
+ *   The module for which to find the features system path.
+ *
+ * @return string
+ *   The system path for the module's Behat bootstrap directory.
+ */
+function behat_module_bootstrap_path($module) {
+  if (file_exists(drupal_get_path('module', $module) . '/features/bootstrap/FeatureContext.php')) {
+    $system_path = DRUPAL_ROOT . '/' . drupal_get_path('module', $module) . '/features/bootstrap';
+  }
+  else {
+    $system_path = DRUPAL_ROOT . '/' . drupal_get_path('module', 'behatrunner') . '/features/bootstrap';
+  }
+
   return $system_path;
 }
