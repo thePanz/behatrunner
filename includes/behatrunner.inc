@@ -287,9 +287,9 @@ function behatrunner_execute_tests($scenarios = array(), $tags = array(), $forma
   composer_manager_register_autoloader();
   $results = '';
 
-  $tags = behat_tags_argument_build($tags);
-  $formats = behat_format_arguments_build($formats);
-  $config = behat_config_argument_build();
+  $tags = behatrunner_tags_argument_build($tags);
+  $formats = behatrunner_format_arguments_build($formats);
+  $config = behatrunner_config_argument_build();
 
   $vendor = composer_manager_vendor_dir();
   $binary_path = $vendor . '/bin/behat';
@@ -300,7 +300,7 @@ function behatrunner_execute_tests($scenarios = array(), $tags = array(), $forma
   foreach ($scenarios as $scenario) {
     $scenario_location = ' ' . DRUPAL_ROOT . '/' . $scenario->location;
     $features_path = behatrunner_module_features_path($scenario->module);
-    $bootstrap_path = behat_module_bootstrap_path($scenario->module);
+    $bootstrap_path = behatrunner_module_bootstrap_path($scenario->module);
 
     // Construct the command.
     $command = array(
@@ -312,10 +312,10 @@ function behatrunner_execute_tests($scenarios = array(), $tags = array(), $forma
 
     // @todo Replace with implementation of behat_set_env_params(). We should
     // not overwrite the entire BEHAT_PARAMS variable, only a specific key.
-    //behat_set_env_param('paths[features]', $features_path);
+    // behat_set_env_param('paths[features]', $features_path);
     putenv("BEHAT_PARAMS=paths[features]=$features_path&paths[bootstrap]=$bootstrap_path");
 
-    $results .= behat_execute_tests_command($command);
+    $results .= behatrunner_execute_tests_command($command);
 
     if (!empty($result_file_location)) {
       if (variable_get('behatrunner_log', 'filesystem_database') == "filesystem_database") {
@@ -334,10 +334,12 @@ function behatrunner_execute_tests($scenarios = array(), $tags = array(), $forma
  * Builds the --formats and --out arguments for the behat command.
  *
  * @param array $formats
+ *   An array of behat output formats.
  *
  * @return string
+ *   A snippet of the behat command containg format flag.
  */
-function behat_format_arguments_build($formats) {
+function behatrunner_format_arguments_build($formats) {
   if (!$formats) {
     $formats = array('progress', 'junit');
   }
@@ -376,7 +378,7 @@ function behat_format_arguments_build($formats) {
  *
  * @todo Refactor this, it doesn't really work!
  */
-function behat_tags_argument_build($tags) {
+function behatrunner_tags_argument_build($tags) {
   $tags_string = '';
   if (count($tags) > 0) {
     $tags_string = ' --tags "~@';
@@ -391,18 +393,24 @@ function behat_tags_argument_build($tags) {
  * Builds the --config argument for the behat command.
  *
  * @return string
+ *   A snippet of behat command containing the configuration flag.
  */
-function behat_config_argument_build() {
+function behatrunner_config_argument_build() {
   $config_file = drupal_realpath('public://behatrunner/behat.yml');
 
   return '--config  ' . $config_file;
 }
 
 /**
- * @param $command
+ * Executes a command via the Symfony Process compontet.
+ *
+ * @param array $command
+ *   An array of strings, to be imploded and run as a command.
+ *
  * @return string
+ *   The output of the executed command.
  */
-function behat_execute_tests_command($command) {
+function behatrunner_execute_tests_command($command) {
 
   $command = implode(' ', $command);
   $process = new \Symfony\Component\Process\Process($command);
@@ -456,38 +464,39 @@ function behatrunner_log_scenario_result($junit_results) {
     $scenarios_by_title[$scenario->title] = $scenario;
   }
 
-    // Delete log entries for previous runs for this scenario.
-    $num_deleted = db_delete('behatrunner_log')
-      ->condition('bsid', $junit_results->bsid)
-      ->execute();
+  // Delete log entries for previous runs for this scenario.
+  $num_deleted = db_delete('behatrunner_log')
+    ->condition('bsid', $junit_results->bsid)
+    ->execute();
 
-    $values = array(
-      'bsid' => 1,
-      'duration' => $junit_results['time'],
-      'assertions' => $junit_results['assertions'],
-      'message' => $junit_results['message'],
-      'status' => $junit_results['status'],
-      'timestamp' => REQUEST_TIME,
-    );
+  $values = array(
+    'bsid' => 1,
+    'duration' => $junit_results['time'],
+    'assertions' => $junit_results['assertions'],
+    'message' => $junit_results['message'],
+    'status' => $junit_results['status'],
+    'timestamp' => REQUEST_TIME,
+  );
 
-    // Insert new log entry for current run of this Behat scenario.
-    $blid = db_insert('behatrunner_log')
-      ->fields($values)
-      ->execute();
+  // Insert new log entry for current run of this Behat scenario.
+  $blid = db_insert('behatrunner_log')
+    ->fields($values)
+    ->execute();
 
-    // Update scenario entity with the id of the new log entry.
-    // $scenario->blid = $blid;
-    //@todo save entity with new blid.
+  // Update scenario entity with the id of the new log entry.
+  // $scenario->blid = $blid;
+  // @todo save entity with new blid.
 }
 
 /**
- * Determine if there are any scenarios registered in the database
+ * Determine if there are any scenarios registered in the database.
  *
  * @return boolean
+ *   TRUE if at least one behat scenario was found in the database.
  */
 function behatrunner_scenarios_exist() {
 
-  // Check if there are any registrations
+  // Check if there are any registrations.
   $query = 'SELECT bsid FROM {behatrunner_scenario} LIMIT 1';
   $result = db_query($query);
   $record = $result->fetchObject();
@@ -528,7 +537,7 @@ function behatrunner_module_features_path($module) {
  * @return string
  *   The system path for the module's Behat bootstrap directory.
  */
-function behat_module_bootstrap_path($module) {
+function behatrunner_module_bootstrap_path($module) {
   if (file_exists(drupal_get_path('module', $module) . '/features/bootstrap/FeatureContext.php')) {
     $system_path = DRUPAL_ROOT . '/' . drupal_get_path('module', $module) . '/features/bootstrap';
   }
