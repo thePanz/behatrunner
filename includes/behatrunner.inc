@@ -108,16 +108,16 @@ function behatrunner_register_feature_scenarios($feature) {
 function behatrunner_get_parser() {
   $keywords = new Behat\Gherkin\Keywords\ArrayKeywords(array(
     'en' => array(
-        'feature'          => 'Feature',
-        'background'       => 'Background',
-        'scenario'         => 'Scenario',
-        'scenario_outline' => 'Scenario Outline|Scenario Template',
-        'examples'         => 'Examples|Scenarios',
-        'given'            => 'Given',
-        'when'             => 'When',
-        'then'             => 'Then',
-        'and'              => 'And',
-        'but'              => 'But'
+      'feature'          => 'Feature',
+      'background'       => 'Background',
+      'scenario'         => 'Scenario',
+      'scenario_outline' => 'Scenario Outline|Scenario Template',
+      'examples'         => 'Examples|Scenarios',
+      'given'            => 'Given',
+      'when'             => 'When',
+      'then'             => 'Then',
+      'and'              => 'And',
+      'but'              => 'But',
     ),
   ));
   $lexer  = new Behat\Gherkin\Lexer($keywords);
@@ -482,7 +482,7 @@ function behatrunner_log_scenario_result($junit_results) {
 /**
  * Determine if there are any scenarios registered in the database.
  *
- * @return boolean
+ * @return bool
  *   TRUE if at least one behat scenario was found in the database.
  */
 function behatrunner_scenarios_exist() {

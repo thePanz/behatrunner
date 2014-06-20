@@ -101,7 +101,7 @@ function drush_behatrunner_behat_register_modules($module = NULL) {
 function drush_behatrunner_behat_run_tests() {
   module_load_include('inc', 'behatrunner', 'includes/behatrunner');
 
-  // If there are no registrations, run auto discovery
+  // If there are no registrations, run auto discovery.
   if (!behatrunner_scenarios_exist()) {
     behatrunner_discover_modules();
   }
