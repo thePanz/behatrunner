@@ -12,9 +12,7 @@ use Symfony\Component\Yaml\Dumper;
  * Implements hook_install().
  */
 function behatrunner_install() {
-  if (drupal_is_cli()) {
-    ini_set('memory_limit', '768M');
-  }
+
 }
 
 
