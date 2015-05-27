@@ -1,16 +1,24 @@
 default:
+  suites:
+    default:
+      contexts:
+        - Drupal\DrupalExtension\Context\DrupalContext
+        - Drupal\DrupalExtension\Context\MinkContext
+        - Drupal\DrupalExtension\Context\MessageContext
+        - Drupal\DrupalExtension\Context\DrushContext
+        - FeatureContext
   extensions:
-    Behat\MinkExtension\Extension:
+    Behat\MinkExtension:
       goutte: ~
       default_session: goutte
       javascript_session: selenium2
       selenium2:
         wd_host: 'http://127.0.0.1:4444/wd/hub'
-      base_url: http://local.drupal7
-    Drupal\DrupalExtension\Extension:
+      base_url: http://behatrunner.dev
+    Drupal\DrupalExtension:
       blackbox: ~
       api_driver: drupal
       drupal:
-          drupal_root: "/Users/matthew.grasmick/Sites/personal/drupal7"
+          drupal_root: "/var/www/behatrunner"
       drush:
           alias: '@self'
