@@ -31,8 +31,7 @@ function behatrunner_discover_modules() {
  * @param string $module
  *   The machine name of a module.
  *
- * @return bool
- *   TRUE is the module contained features to register.
+ * @return bool TRUE if the module contained features to register.
  */
 function behatrunner_register_module($module) {
   $registered = behatrunner_module_is_registered($module);
@@ -46,10 +45,10 @@ function behatrunner_register_module($module) {
   /** @var \Behat\Gherkin\Node\FeatureNode $feature */
   foreach ($features as $feature) {
     // Register all scenarios for each feature.
-    $status = behatrunner_register_feature_scenarios($feature);
+    behatrunner_register_feature_scenarios($feature);
   }
 
-  return (bool) $features;
+  return !empty($features);
 }
 
 /**

@@ -87,10 +87,16 @@ function drush_behatrunner_behat_register_modules($module = NULL) {
   module_load_include('inc', 'behatrunner', 'includes/behatrunner');
 
   if (!$module) {
-    behatrunner_discover_modules();
+      behatrunner_discover_modules();
   }
   else {
-    behatrunner_register_module($module);
+      $registered = behatrunner_register_module($module);
+      if ($registered) {
+          drush_log('Module' . $module .' scenarios added', 'success');
+      }
+      else {
+          drush_log('Module' . $module .': no scenarios found', 'warning');
+      }
   }
 }
 
