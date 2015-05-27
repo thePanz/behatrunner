@@ -1,13 +1,10 @@
 <?php
 
-use Drupal\DrupalExtension\Context\DrupalContext,
-  Drupal\DrupalExtension\Event\EntityEvent;
+use Drupal\DrupalExtension\Context\DrupalSubContextInterface;
+use Drupal\DrupalDriverManager;
 
-use Behat\Behat\Exception\PendingException;
+class FeatureContext implements DrupalSubContextInterface {
 
-use Behat\Gherkin\Node\PyStringNode,
-  Behat\Gherkin\Node\TableNode;
-
-class FeatureContext extends DrupalContext {
-
+    public function __construct(DrupalDriverManager $drupal) {
+    }
 }
