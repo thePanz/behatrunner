@@ -215,48 +215,34 @@ function behatrunner_deregister_module_scenarios($module) {
 }
 
 /**
- * Gets environmental parameters for Behat.
+ * Set the correct BEHAT_PARAMS for the given ScenarioNode
  *
- * @return array
- *   An associative array of environmental Behat parameters.
+ * @param \Behat\Gherkin\Node\ScenarioNode $scenario
  */
-function behatrunner_get_env_params() {
-  $behat_params = json_decode(getenv('BEHAT_PARAMS'));
-  return $behat_params;
+function behatrunner_command_set_environment($scenario) {
+    $behat_params = array(
+        // Adding Context autoloading
+        // @see: http://docs.behat.org/en/v3.0/guides/6.profiles.html#custom-autoloading
+        'autoload' => array(
+            behatrunner_module_bootstrap_path($scenario->module)
+        ),
+        // Adding feature location
+        // @see: http://docs.behat.org/en/v3.0/guides/5.suites.html#suite-paths
+        'suites' => array(
+            'default' => array(
+                'paths' => array(behatrunner_module_features_path($scenario->module)),
+            )
+        )
+    );
+    putenv("BEHAT_PARAMS=" . json_encode($behat_params));
 }
 
 /**
- * Sets an environmental Behat parameter.
- *
- * @param string $key
- *   The parameter key.
- *
- * @param string $value
- *   The parameter value.
- *
- * @return bool
- *   TRUE if parameter was set successfully.
+ * Returns the behat.yml location
+ * @return string
  */
-function behatrunner_set_env_param($key, $value) {
-  $behat_params = behatrunner_get_env_params();
-  $behat_params[$key] = $value;
-
-  behatrunner_set_env_params($behat_params);
-}
-
-/**
- * Sets an environmental Behat parameter.
- *
- * @param $behat_params
- * @return bool
- */
-function behatrunner_set_env_params($behat_params) {
-  foreach ($behat_params as $param_key => $param_value) {
-    if (empty($param_value)) {
-      unset($behat_params[$param_key]);
-    }
-  }
-  return 1; //putenv("BEHAT_PARAMS=" . json_encode($behat_params));
+function behatrunner_scenario_get_config() {
+    return drupal_realpath('public://behatrunner/behat.yml');
 }
 
 /**
@@ -284,36 +270,19 @@ function behatrunner_execute_tests($scenarios = array(), $tags = array(), $forma
   composer_manager_register_autoloader();
   $results = '';
 
-  $tags = behatrunner_tags_argument_build($tags);
-  $formats = behatrunner_format_arguments_build($formats);
-  $config = behatrunner_config_argument_build();
-
   $vendor = composer_manager_vendor_dir();
-  $binary_path = $vendor . '/bin/behat';
+  $binaryCommand = $vendor . '/bin/behat';
 
   if (!$scenarios) {
     $scenarios = entity_load('behatrunner_scenario');
   }
   foreach ($scenarios as $scenario) {
-    $scenario_location = ' ' . DRUPAL_ROOT . '/' . $scenario->location;
-    $features_path = behatrunner_module_features_path($scenario->module);
-    $bootstrap_path = behatrunner_module_bootstrap_path($scenario->module);
+    $scenarioLocation = ' ' . DRUPAL_ROOT . '/' . $scenario->location;
 
-    // Construct the command.
-    $command = array(
-      $binary_path,
-      $formats,
-      $scenario_location,
-      $config,
-    );
+    behatrunner_command_set_environment($scenario);
 
-    $params = array('paths' => array(
-      'features' => $features_path,
-      'bootstrap' => $bootstrap_path,
-    ));
-    behatrunner_set_env_params($params);
-
-    $results .= behatrunner_execute_tests_command($command);
+    $params = behatrunner_command_build_arguments($scenario);
+    $results .= behatrunner_command_execute_test($binaryCommand, $scenarioLocation, $params);
 
     if (!empty($result_file_location)) {
       if (variable_get('behatrunner_log', 'filesystem_database') == "filesystem_database") {
@@ -329,106 +298,120 @@ function behatrunner_execute_tests($scenarios = array(), $tags = array(), $forma
 }
 
 /**
+ *
+ * @param \Behat\Gherkin\Node\ScenarioNode $scenario
+ * @param array $args
+ * @return array
+ */
+function behatrunner_command_build_arguments($scenario, $args = array()) {
+    $params = array(
+        '--config ' . behatrunner_scenario_get_config($scenario),
+        '--colors',
+        '--verbose',
+    );
+
+    if (isset($args['formats'])) {
+        $params = array_merge($params, behatrunner_command_build_arguments_formats($args['formats']));
+    }
+
+    if (isset($args['tags'])) {
+        $params = array_merge($params, behatrunner_command_build_arguments_formats($args['tags']));
+    }
+
+    return $params;
+}
+
+/**
  * Builds the --formats and --out arguments for the behat command.
  *
- * @param array $formats
- *   An array of behat output formats.
- *
- * @return string
- *   A snippet of the behat command containg format flag.
+ * @param array $formats An array of behat output formats.
+ * @return array A snippet of the behat command containg format flag.
  */
-function behatrunner_format_arguments_build($formats) {
-  if (!$formats) {
-    $formats = array('progress', 'junit');
-  }
-
-  // Build an array of output destinations for each format.
-  $out_dests = array();
-  foreach ($formats as $format) {
-    // Junit XML is output to file system.
-    if ($format == 'junit') {
-      $dest_dir = 'public://behat';
-      $output_dir = file_prepare_directory($dest_dir, FILE_CREATE_DIRECTORY);
-      $wrapper = file_stream_wrapper_get_instance_by_uri($dest_dir);
-      $output_dest = $wrapper->realpath();
-      $out_dests[$format] = $output_dest;
+function behatrunner_command_build_arguments_formats($formats = array()) {
+    if (!$formats) {
+        // $formats = array('progress', 'junit');
+        $formats = array('progress');
     }
-    // Other formats are written to stdout.
-    else {
-      $out_dests[$format] = '';
-    }
-  }
 
-  $output = '';
-  foreach($formats as $format) {
-    $output .= ' --format=' . $format;
-    if (isset($out_dest[$format])) {
-        $output .= ' --out=' . $out_dests[$format];
+    // Build an array of output destinations for each format.
+    $out_dests = array();
+    foreach ($formats as $format) {
+        // Junit XML is output to file system.
+        if ($format == 'junit') {
+            $dest_dir = 'public://behat';
+            $output_dir = file_prepare_directory($dest_dir, FILE_CREATE_DIRECTORY);
+            $wrapper = file_stream_wrapper_get_instance_by_uri($dest_dir);
+            $output_dest = $wrapper->realpath();
+            $out_dests[$format] = $output_dest;
+        }
+        // Other formats are written to stdout.
+        else {
+            $out_dests[$format] = '';
+        }
     }
-  }
 
-  return $output;
+    $output = array();
+    foreach($formats as $format) {
+        $output[] = '--format=' . $format;
+        if (isset($out_dest[$format])) {
+            $output[] = '--out=' . $out_dests[$format];
+        }
+    }
+
+    return $output;
 }
 
 /**
  * Builds the --tags argument for the behat command.
  *
- * @param array $tags
- *   An array of behat tags.
+ * @param array $tags An array of behat tags.
+ * @return array
  *
- * @return string
- *   The --tags argument. E.g., "--tags=@sometag".
- *
- * @todo Refactor this, it doesn't really work!
+ * @todo implement this function
  */
-function behatrunner_tags_argument_build($tags) {
-  $tags_string = '';
-  if (count($tags) > 0) {
-    $tags_string = ' --tags "~@';
-    $tags_string .= implode($tags, '&&@');
-    $tags_string .= '"';
-  }
-
-  return $tags_string;
+function behatrunner_command_build_arguments_tags($tags = array()) {
+    return array();
 }
 
 /**
- * Builds the --config argument for the behat command.
+ * Executes a command via the Symfony Process component.
  *
- * @return string
- *   A snippet of behat command containing the configuration flag.
+ * @param $binaryCommand
+ * @param $scenarioLocation
+ * @param array $arguments
+ * @param array $arguments
+ * @return bool
  */
-function behatrunner_config_argument_build() {
-  $config_file = drupal_realpath('public://behatrunner/behat.yml');
+function behatrunner_command_execute_test($binaryCommand, $scenarioLocation, $arguments = array(), &$output = null) {
 
-  return '--config  ' . $config_file;
-}
+    /*
+    // Building the command line for Behat executable
+    $builder = new \Symfony\Component\Process\ProcessBuilder();
+    $builder->setPrefix($binaryCommand);
 
-/**
- * Executes a command via the Symfony Process compontet.
- *
- * @param array $command
- *   An array of strings, to be imploded and run as a command.
- *
- * @return string
- *   The output of the executed command.
- */
-function behatrunner_execute_tests_command($command) {
+    $arguments[] = $scenarioLocation;
+    $builder->setArguments($arguments);
 
-  $command = implode(' ', $command);
-  $process = new \Symfony\Component\Process\Process($command);
-  $process->run(function ($type, $buffer) {
-    print $buffer;
-  });
+    $process = $builder->getProcess();
+    */
 
-  if (!$process->isSuccessful()) {
-    $output = $process->getErrorOutput();
-  }
-  else {
-    $output = $process->getOutput();
-  }
+    // @todo: find a better implementation for command arguments by using ProcessBuilder
+    $command = $binaryCommand . ' ' . implode(' ', $arguments) . ' ' . $scenarioLocation;
+    $process = new Symfony\Component\Process\Process($command);
 
-  return $output;
+    $process->run(function ($type, $buffer) {
+        print $buffer;
+    });
+
+    if (!is_null($output)) {
+        if (!$process->isSuccessful()) {
+            $output = $process->getErrorOutput();
+        } else {
+            $output = $process->getOutput();
+        }
+    }
+
+    return $process->isSuccessful();
 }
 
 /**

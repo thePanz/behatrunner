@@ -113,7 +113,7 @@ function drush_behatrunner_behat_run_tests() {
   }
 
   $formats = array();
-  if ($formats_option = drush_get_option('formats', 'pretty,junit')) {
+  if ($formats_option = drush_get_option('formats', 'pretty')) {
     $formats = explode(',', $formats_option);
   }
 
