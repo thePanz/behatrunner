@@ -177,3 +177,20 @@ function behatrunner_test_location_access($op, $projectqa_phploc_result, $accoun
           || user_access('view behatrunner_test_location entities', $account);
   }
 }
+
+/**
+ * Implements hook_modules_disabled().
+ * @param $modules
+ */
+function behatrunner_modules_disabled($modules) {
+    if (empty($modules))
+        return;
+
+    module_load_include('inc', 'behatrunner', 'includes/behatrunner');
+    foreach ($modules as $module) {
+        if (behatrunner_module_is_registered($module)) {
+            behatrunner_deregister_module_scenarios($module);
+        }
+    }
+}
+
