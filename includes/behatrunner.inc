@@ -43,6 +43,7 @@ function behatrunner_register_module($module) {
 
   // Discover all features for the given module.
   $features = behatrunner_discover_module_features($module);
+  /** @var \Behat\Gherkin\Node\FeatureNode $feature */
   foreach ($features as $feature) {
     // Register all scenarios for each feature.
     $status = behatrunner_register_feature_scenarios($feature);
@@ -67,8 +68,7 @@ function behatrunner_discover_module_features($module) {
 
   $features = array();
   foreach ($feature_files as $feature_file) {
-    $feature = $parser->parse(file_get_contents($feature_file->uri));
-    $feature->setFile($feature_file->uri);
+    $feature = $parser->parse(file_get_contents($feature_file->uri), $feature_file->uri);
     $feature->drupalModule = $module;
     $features[$feature_file->filename] = $feature;
   }
@@ -79,17 +79,17 @@ function behatrunner_discover_module_features($module) {
 /**
  * Registers all scenarios for a given feature.
  *
- * @param object $feature
- *   A Behat feature.
+ * @param Behat\Gherkin\Node\FeatureNode $feature A Behat feature.
  */
 function behatrunner_register_feature_scenarios($feature) {
   $feature_location = behatrunner_convert_absolute_to_relative_path($feature->getFile());
   $scenarios = $feature->getScenarios();
 
+  /** @var Behat\Gherkin\Node\ScenarioNode $scenario */
   foreach ($scenarios as $scenario) {
     $data['title'] = $scenario->getTitle();
     // @todo Figure out why this isn't getting the feature!
-    $data['feature'] = $scenario->getFeature()->getTitle();
+    $data['feature'] = $feature->getTitle();
     $data['location'] = $feature_location . ':' . $scenario->getLine();
     $data['module'] = $feature->drupalModule;
     $entity = entity_create('behatrunner_scenario', $data);
@@ -102,7 +102,7 @@ function behatrunner_register_feature_scenarios($feature) {
 /**
  * Returns a Behat Parser object for parsing Gherkin.
  *
- * @return object
+ * @return Behat\Gherkin\Parser
  *   An Behat\Gherkin\Parser object initialized with default English keywords.
  */
 function behatrunner_get_parser() {
@@ -219,11 +219,10 @@ function behatrunner_deregister_module_scenarios($module) {
  * Gets environmental parameters for Behat.
  *
  * @return array
- *   An associateive array of environmental Behat parameters.
+ *   An associative array of environmental Behat parameters.
  */
 function behatrunner_get_env_params() {
-  $behat_params = parse_url(getenv('BEHAT_PARAMS'));
-
+  $behat_params = json_decode(getenv('BEHAT_PARAMS'));
   return $behat_params;
 }
 
@@ -240,17 +239,25 @@ function behatrunner_get_env_params() {
  *   TRUE if parameter was set successfully.
  */
 function behatrunner_set_env_param($key, $value) {
-  $behat_params = parse_url(getenv('BEHAT_PARAMS'));
+  $behat_params = behatrunner_get_env_params();
   $behat_params[$key] = $value;
 
+  behatrunner_set_env_params($behat_params);
+}
+
+/**
+ * Sets an environmental Behat parameter.
+ *
+ * @param $behat_params
+ * @return bool
+ */
+function behatrunner_set_env_params($behat_params) {
   foreach ($behat_params as $param_key => $param_value) {
-    if ($param_value === '') {
+    if (empty($param_value)) {
       unset($behat_params[$param_key]);
     }
   }
-
-  $behat_params_value = http_build_query($behat_params);
-  return putenv("BEHAT_PARAMS=$behat_params_value");
+  return 1; //putenv("BEHAT_PARAMS=" . json_encode($behat_params));
 }
 
 /**
@@ -301,10 +308,11 @@ function behatrunner_execute_tests($scenarios = array(), $tags = array(), $forma
       $config,
     );
 
-    // @todo Replace with implementation of behat_set_env_params(). We should
-    // not overwrite the entire BEHAT_PARAMS variable, only a specific key.
-    // behat_set_env_param('paths[features]', $features_path);
-    putenv("BEHAT_PARAMS=paths[features]=$features_path&paths[bootstrap]=$bootstrap_path");
+    $params = array('paths' => array(
+      'features' => $features_path,
+      'bootstrap' => $bootstrap_path,
+    ));
+    behatrunner_set_env_params($params);
 
     $results .= behatrunner_execute_tests_command($command);
 
@@ -352,10 +360,15 @@ function behatrunner_format_arguments_build($formats) {
     }
   }
 
-  $formats = '-f ' . implode(',', $formats);
-  $out = "--out='" . implode(',', $out_dests) . ",'";
+  $output = '';
+  foreach($formats as $format) {
+    $output .= ' --format=' . $format;
+    if (isset($out_dest[$format])) {
+        $output .= ' --out=' . $out_dests[$format];
+    }
+  }
 
-  return $formats . ' ' . $out;
+  return $output;
 }
 
 /**
