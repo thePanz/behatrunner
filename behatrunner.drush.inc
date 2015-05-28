@@ -108,24 +108,32 @@ function drush_behatrunner_behat_clear_scenarios($module = null) {
 }
 
 /**
- * Register a module's scenarios.
+ * Register the scenarios of the given module name, if empty all enabled modules
+ *  will be scanned for scenarios.
  *
- * @param string $module
- *   The name of the module to register.
+ * @param string $moduleName The name of the module to register.
  */
-function drush_behatrunner_behat_scan_scenarios($module = NULL) {
+function drush_behatrunner_behat_scan_scenarios($moduleName = NULL) {
   module_load_include('inc', 'behatrunner', 'includes/behatrunner');
 
-  if (!$module) {
-      behatrunner_discover_modules();
+  $modules = array();
+  $noticeNoScenarios = false;
+
+  if (!empty($moduleName)) {
+      $modules[] = $moduleName;
+      $noticeNoScenarios = true;
   }
   else {
-      $registered = behatrunner_register_module($module);
-      if ($registered) {
-          drush_log('Module' . $module .' scenarios added', 'success');
+      $modules = module_list();
+  }
+
+  foreach($modules as $module) {
+      $registered = behatrunner_features_scan_module($module);
+      if ($noticeNoScenarios && !$registered) {
+          drush_log(dt('No scenarios found in module "@module"', array('@module' => $module)), 'warning');
       }
-      else {
-          drush_log('Module' . $module .': no scenarios found', 'warning');
+      else if ($registered) {
+          drush_log(dt('Added scenarios for module "@module"', array('@module' => $module)), 'success');
       }
   }
 }

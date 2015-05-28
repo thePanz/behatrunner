@@ -6,34 +6,13 @@
  */
 
 /**
- * Discovers and registers all modules implementing hook_behat_info().
- *
- * @return array
- *   An array of the modules that were discovered.
- */
-function behatrunner_discover_modules() {
-  $modules = module_list();
-
-  $discovered = array();
-  foreach ($modules as $module) {
-    $registered = behatrunner_register_module($module);
-    if ($registered) {
-      $discovered[] = $module;
-    }
-  }
-
-  return $discovered;
-}
-
-/**
  * Registers the locations of all scenarios for a given module.
  *
- * @param string $module
- *   The machine name of a module.
+ * @param string $module The machine name of a module.
  *
  * @return bool TRUE if the module contained features to register.
  */
-function behatrunner_register_module($module) {
+function behatrunner_features_scan_module($module) {
   $registered = behatrunner_module_is_registered($module);
   // If this module has been registered, remove its scenario registrations.
   if ($registered) {
@@ -41,7 +20,7 @@ function behatrunner_register_module($module) {
   }
 
   // Discover all features for the given module.
-  $features = behatrunner_discover_module_features($module);
+  $features = behatrunner_feature_get_module_scenarios($module);
   /** @var \Behat\Gherkin\Node\FeatureNode $feature */
   foreach ($features as $feature) {
     // Register all scenarios for each feature.
@@ -60,7 +39,7 @@ function behatrunner_register_module($module) {
  * @return array
  *   An associative array of features, keyed by filename.
  */
-function behatrunner_discover_module_features($module) {
+function behatrunner_feature_get_module_scenarios($module) {
   $system_path = behatrunner_module_features_path($module);
   $feature_files = file_scan_directory($system_path, '/.*\.feature$/', array('recurse' => TRUE));
   $parser = behatrunner_get_parser();
