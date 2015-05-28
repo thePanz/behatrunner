@@ -172,20 +172,21 @@ function behatrunner_module_is_registered($module) {
 /**
  * Looks up all registered scenarios for the given module.
  *
- * @param string $module
- *   The module name.
+ * @param string $module The module name, if empty all scenarios will be retrieved.
  *
  * @return array
  *   An array of locations for registered scenarios for the given module, keyed
  *   by entitiy id.
  */
-function behatrunner_get_module_scenario_registrations($module) {
+function behatrunner_get_module_scenario_registrations($module = null) {
   $query = 'SELECT bsid, location FROM {behatrunner_scenario}';
-  $query .= ' WHERE module=:module';
-  $result = db_query($query, array(':module' => $module));
-  $registrations = $result->fetchAllKeyed(0, 1);
+  $queryParams = array();
 
-  return $registrations;
+  if (!empty($module)) {
+      $query .= ' WHERE module=:module';
+      $queryParams = array(':module' => $module);
+  }
+  return db_query($query, $queryParams)->fetchAllKeyed(0, 1);
 }
 
 /**
@@ -201,15 +202,17 @@ function behatrunner_deregister_scenario($bsid) {
 /**
  * De-registers all scenario registrations for a given module.
  *
- * @param string $module
- *   The name for this location.
+ * @param string $module The name for this location. If empty all modules will be de-registered
  *
  * @return bool
  *   FALSE if the given entity type isn't compatible to the CRUD API.
  */
-function behatrunner_deregister_module_scenarios($module) {
+function behatrunner_deregister_module_scenarios($module = null) {
   $scenario_registrations = behatrunner_get_module_scenario_registrations($module);
   $entity_ids = array_keys($scenario_registrations);
+
+    if (empty($entity_ids))
+        return true;
 
   return entity_delete_multiple('behatrunner_scenario', $entity_ids);
 }

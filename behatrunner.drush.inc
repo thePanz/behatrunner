@@ -38,6 +38,17 @@ function behatrunner_drush_command() {
     ),
     'aliases' => array('brm'),
   );
+  $items['behat-clear-scenarios'] = array(
+      'description' => dt('Clear register Behat scenarios. If no argument is specified, all scenarios will be removed.'),
+      'arguments' => array(
+          'module' => '(optional) Name of the module containing the scenarios to be removed.',
+      ),
+      'examples' => array(
+          'Clear all scenarios' => 'drush bclear',
+          'Clear scenarios from specific module' => 'drush blcear behatrunner',
+      ),
+      'aliases' => array('bclear'),
+  );
   $items['behat-run-tests'] = array(
     'description' => dt('Run the behat tests.'),
     'options' => array(
@@ -75,6 +86,25 @@ function drush_behatrunner_behat_list_scenarios() {
   else {
     drush_print(t('There are no test locations registered.'));
   }
+}
+
+/**
+ * @param string $module
+ */
+function drush_behatrunner_behat_clear_scenarios($module = null) {
+    module_load_include('inc', 'behatrunner', 'includes/behatrunner');
+    $result = behatrunner_deregister_module_scenarios($module);
+    if ($result === false) {
+        drush_log('Error while removing scenarios!', 'error');
+        return;
+    }
+
+    if (!empty($module)) {
+        drush_log(dt('All scenarios of module "@module" removed', array('@module' => $module)), 'success');
+    }
+    else {
+        drush_log('All scenarios removed', 'success');
+    }
 }
 
 /**
