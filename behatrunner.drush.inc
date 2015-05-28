@@ -56,9 +56,17 @@ function behatrunner_drush_command() {
         'description' => 'The output formats',
         'example_value' => 'junit',
       ),
+      'modules' => array(
+          'description' => 'A comma separated list of modules: only scenarios of such modules will be executed',
+          'example_value' => 'behatrunner,my_module',
+      ),
+      'tags' => array(
+          'description' => 'A Comma separated list of tags: only scenarios tagged as such will be executed',
+          'example_value' => 'api,myTag',
+      ),
     ),
     'examples' => array(
-      'Standard example' => 'drush behat-run-tests',
+      'Run all registered tests' => 'drush behat-run-tests',
     ),
     'aliases' => array('brun'),
   );
@@ -138,24 +146,51 @@ function drush_behatrunner_behat_scan_scenarios($moduleName = NULL) {
   }
 }
 
-
 /**
  * Run behat tests.
  */
 function drush_behatrunner_behat_run_tests() {
-  module_load_include('inc', 'behatrunner', 'includes/behatrunner');
+    module_load_include('inc', 'behatrunner', 'includes/behatrunner');
+    module_load_include('inc', 'behatrunner','behatrunner.crud');
 
-  // If there are no registrations, run auto discovery.
-  if (!behatrunner_scenarios_exist()) {
-    behatrunner_discover_modules();
-  }
+    if (behatrunner_scenario_count() == 0) {
+        drush_log(dt('No scenarios registered to be run!'), 'warning');
+        drush_log(dt('Run "drush bscan" to update or discover newly added scenarios.'), 'warning');
+        return;
+    }
 
-  $formats = array();
-  if ($formats_option = drush_get_option('formats', 'pretty')) {
-    $formats = explode(',', $formats_option);
-  }
+    $tags = drush_behatrunner_explode_multivalue_option('tags');
+    $modules = drush_behatrunner_explode_multivalue_option('modules');
+    $formats = drush_behatrunner_explode_multivalue_option('formats', 'pretty');
 
-  // TODO: Accept parameters.
-  module_load_include('inc', 'behatrunner', 'includes/behatrunner');
-  $results = behatrunner_execute_tests(array(), array(), $formats);
+    if (empty($modules)) {
+        $scenarios = entity_load('behatrunner_scenario');
+    }
+    else {
+        module_load_include('inc', 'behatrunner','behatrunner.crud');
+        $scenarios = behatrunner_scenario_load_for_modules($modules);
+    }
+
+    if (empty($scenarios)) {
+        drush_log(dt('No scenarios found for the given modules!'), 'warning');
+        return;
+    }
+
+    $args = array(
+        'formats' => $formats,
+        'tags' => $tags,
+    );
+
+  $results = behatrunner_execute_tests($scenarios, $args);
+}
+
+/**
+ * Returns the multi-value option from the drush_command line for teh given option
+ * @param $name
+ * @param $default
+ * @param string $separator
+ * @return array
+ */
+function drush_behatrunner_explode_multivalue_option($name, $default = null, $separator = ',') {
+    return array_unique(array_filter(explode($separator, drush_get_option($name, $default))));
 }

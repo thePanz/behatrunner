@@ -140,42 +140,9 @@ function behatrunner_convert_absolute_to_relative_path($absolute_path) {
  *   TRUE if the module has behat scenarios registered with behatrunner.
  */
 function behatrunner_module_is_registered($module) {
-  $query = 'SELECT bsid FROM {behatrunner_scenario}';
-  $query .= ' WHERE module=:module LIMIT 1';
-  $result = db_query($query, array(':module' => $module));
-  $record = $result->fetchObject();
-
-  return (boolean) $record;
-}
-
-/**
- * Looks up all registered scenarios for the given module.
- *
- * @param string $module The module name, if empty all scenarios will be retrieved.
- *
- * @return array
- *   An array of locations for registered scenarios for the given module, keyed
- *   by entitiy id.
- */
-function behatrunner_get_module_scenario_registrations($module = null) {
-  $query = 'SELECT bsid, location FROM {behatrunner_scenario}';
-  $queryParams = array();
-
-  if (!empty($module)) {
-      $query .= ' WHERE module=:module';
-      $queryParams = array(':module' => $module);
-  }
-  return db_query($query, $queryParams)->fetchAllKeyed(0, 1);
-}
-
-/**
- * De-registers a test location.
- *
- * @param int $bsid
- *   The id for this location.
- */
-function behatrunner_deregister_scenario($bsid) {
-  entity_delete('behatrunner_scenario', $bsid);
+    module_load_include('inc', 'behatrunner','behatrunner.crud');
+    $ids = behatrunner_deregister_module_scenarios($module, true);
+    return count($ids) > 0;
 }
 
 /**
@@ -187,13 +154,12 @@ function behatrunner_deregister_scenario($bsid) {
  *   FALSE if the given entity type isn't compatible to the CRUD API.
  */
 function behatrunner_deregister_module_scenarios($module = null) {
-  $scenario_registrations = behatrunner_get_module_scenario_registrations($module);
-  $entity_ids = array_keys($scenario_registrations);
+    module_load_include('inc', 'behatrunner','behatrunner.crud');
 
-    if (empty($entity_ids))
-        return true;
+    $module = empty($module) ? array() : array($module);
 
-  return entity_delete_multiple('behatrunner_scenario', $entity_ids);
+    $ids = behatrunner_scenario_load_for_modules($module, true);
+    return behatrunner_scenario_delete_multiple($ids);
 }
 
 /**
@@ -248,22 +214,18 @@ function behatrunner_scenario_get_config() {
  * @return string
  *   The command line output.
  */
-function behatrunner_execute_tests($scenarios = array(), $tags = array(), $formats = array()) {
+function behatrunner_execute_tests($scenarios = array(), $args = array()) {
   composer_manager_register_autoloader();
-  $results = '';
-
   $vendor = composer_manager_vendor_dir();
   $binaryCommand = $vendor . '/bin/behat';
 
-  if (!$scenarios) {
-    $scenarios = entity_load('behatrunner_scenario');
-  }
+  $results = '';
   foreach ($scenarios as $scenario) {
     $scenarioLocation = ' ' . DRUPAL_ROOT . '/' . $scenario->location;
 
     behatrunner_command_set_environment($scenario);
 
-    $params = behatrunner_command_build_arguments($scenario);
+    $params = behatrunner_command_build_arguments($scenario, $args);
     $results .= behatrunner_command_execute_test($binaryCommand, $scenarioLocation, $params);
 
     if (!empty($result_file_location)) {
@@ -271,7 +233,7 @@ function behatrunner_execute_tests($scenarios = array(), $tags = array(), $forma
         // Log results to database.
         $junit_result = behatrunner_parse_junit($result_file_location);
         // @todo Complete logging function.
-        behatrunner_log_scenario_result($junit_result);
+        behatrunner_scenario_log_result($junit_result);
       }
     }
   }
@@ -296,9 +258,11 @@ function behatrunner_command_build_arguments($scenario, $args = array()) {
         $params = array_merge($params, behatrunner_command_build_arguments_formats($args['formats']));
     }
 
+    /*
     if (isset($args['tags'])) {
-        $params = array_merge($params, behatrunner_command_build_arguments_formats($args['tags']));
+        $params = array_merge($params, behatrunner_command_build_arguments_tags($args['tags']));
     }
+    */
 
     return $params;
 }
@@ -352,7 +316,12 @@ function behatrunner_command_build_arguments_formats($formats = array()) {
  * @todo implement this function
  */
 function behatrunner_command_build_arguments_tags($tags = array()) {
-    return array();
+    if (empty($tags))
+        return array();
+
+    return array(
+        '--tags \'' . implode(',', $tags) . '\'',
+    );
 }
 
 /**
@@ -422,7 +391,7 @@ function behatrunner_parse_junit($result_file_location) {
  * @param array $junit_results
  *   The parsed junit result xml.
  */
-function behatrunner_log_scenario_result($junit_results) {
+function behatrunner_scenario_log_result($junit_results) {
   $scenarios = entity_load('behatrunner_scenario');
 
   // We need to key the entities by their title because the junit results are
@@ -454,22 +423,6 @@ function behatrunner_log_scenario_result($junit_results) {
   // Update scenario entity with the id of the new log entry.
   // $scenario->blid = $blid;
   // @todo save entity with new blid.
-}
-
-/**
- * Determine if there are any scenarios registered in the database.
- *
- * @return bool
- *   TRUE if at least one behat scenario was found in the database.
- */
-function behatrunner_scenarios_exist() {
-
-  // Check if there are any registrations.
-  $query = 'SELECT bsid FROM {behatrunner_scenario} LIMIT 1';
-  $result = db_query($query);
-  $record = $result->fetchObject();
-
-  return (bool) $record;
 }
 
 /**
