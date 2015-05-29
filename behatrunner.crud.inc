@@ -5,7 +5,7 @@
  * @param bool $idOnly
  * @return array
  */
-function behatrunner_scenario_load_for_modules($modules, $idOnly = false) {
+function behatrunner_scenario_load_filtered($modules = array(), $tags = array(), $idOnly = false) {
     $query = new EntityFieldQuery;
     $query->entityCondition('entity_type', 'behatrunner_scenario');
 
@@ -13,6 +13,12 @@ function behatrunner_scenario_load_for_modules($modules, $idOnly = false) {
     if (!empty($modules)) {
         $query->propertyCondition('module', $modules, 'IN');
     }
+
+    $tags = array_filter($tags);
+    if (!empty($tags)) {
+        $query->propertyCondition('tags', current($tags), 'CONTAINS');
+    }
+
     $result = $query->execute();
 
     if (empty($result) || !array_key_exists('behatrunner_scenario', $result)) {

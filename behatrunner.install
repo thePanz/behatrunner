@@ -86,6 +86,12 @@ function behatrunner_schema() {
         'not null' => TRUE,
         'description' => 'The location of the tests, relative to the Drupal base.',
       ),
+      'tags' => array(
+        'type' => 'varchar',
+        'length' => 256,
+        'not null' => TRUE,
+        'description' => 'The tags of the test (including parent Feature tags).',
+      ),
       'module' => array(
         'type' => 'varchar',
         'length' => 256,

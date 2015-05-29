@@ -163,13 +163,8 @@ function drush_behatrunner_behat_run_tests() {
     $modules = drush_behatrunner_explode_multivalue_option('modules');
     $formats = drush_behatrunner_explode_multivalue_option('formats', 'pretty');
 
-    if (empty($modules)) {
-        $scenarios = entity_load('behatrunner_scenario');
-    }
-    else {
-        module_load_include('inc', 'behatrunner','behatrunner.crud');
-        $scenarios = behatrunner_scenario_load_for_modules($modules);
-    }
+    module_load_include('inc', 'behatrunner','behatrunner.crud');
+    $scenarios = behatrunner_scenario_load_filtered($modules, $tags);
 
     if (empty($scenarios)) {
         drush_log(dt('No scenarios found for the given modules!'), 'warning');

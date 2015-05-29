@@ -70,6 +70,9 @@ function behatrunner_register_feature_scenarios($feature) {
     $data['feature'] = $feature->getTitle();
     $data['location'] = $feature_location . ':' . $scenario->getLine();
     $data['module'] = $feature->drupalModule;
+    $tags = array_unique(array_merge($feature->getTags(), $scenario->getTags()));
+    // Putting a space in the end to be able to match last tag by query.
+    $data['tags'] = ltrim(implode(' ', $tags) . ' ');
     $entity = entity_create('behatrunner_scenario', $data);
     $entity->save();
   }
@@ -158,7 +161,7 @@ function behatrunner_deregister_module_scenarios($module = null) {
 
     $module = empty($module) ? array() : array($module);
 
-    $ids = behatrunner_scenario_load_for_modules($module, true);
+    $ids = behatrunner_scenario_load_filtered($module, true);
     return behatrunner_scenario_delete_multiple($ids);
 }
 
