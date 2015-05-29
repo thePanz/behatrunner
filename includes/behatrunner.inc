@@ -20,7 +20,7 @@ function behatrunner_features_scan_module($module) {
   }
 
   // Discover all features for the given module.
-  $features = behatrunner_feature_get_module_scenarios($module);
+  $features = behatrunner_scenario_from_module($module);
   /** @var \Behat\Gherkin\Node\FeatureNode $feature */
   foreach ($features as $feature) {
     // Register all scenarios for each feature.
@@ -39,8 +39,8 @@ function behatrunner_features_scan_module($module) {
  * @return array
  *   An associative array of features, keyed by filename.
  */
-function behatrunner_feature_get_module_scenarios($module) {
-  $system_path = behatrunner_module_features_path($module);
+function behatrunner_scenario_from_module($module) {
+  $system_path = behatrunner_feature_path($module);
   $feature_files = file_scan_directory($system_path, '/.*\.feature$/', array('recurse' => TRUE));
   $parser = behatrunner_get_parser();
 
@@ -141,7 +141,7 @@ function behatrunner_convert_absolute_to_relative_path($absolute_path) {
  */
 function behatrunner_module_is_registered($module) {
     module_load_include('inc', 'behatrunner','behatrunner.crud');
-    $ids = behatrunner_deregister_module_scenarios($module, true);
+    $ids = behatrunner_scenario_from_module($module, true);
     return count($ids) > 0;
 }
 
@@ -172,13 +172,13 @@ function behatrunner_command_set_environment($scenario) {
         // Adding Context autoloading
         // @see: http://docs.behat.org/en/v3.0/guides/6.profiles.html#custom-autoloading
         'autoload' => array(
-            behatrunner_module_bootstrap_path($scenario->module)
+            behatrunner_feature_bootstrap_path($scenario->module)
         ),
         // Adding feature location
         // @see: http://docs.behat.org/en/v3.0/guides/5.suites.html#suite-paths
         'suites' => array(
             'default' => array(
-                'paths' => array(behatrunner_module_features_path($scenario->module)),
+                'paths' => array(behatrunner_feature_path($scenario->module)),
             )
         )
     );
@@ -434,7 +434,7 @@ function behatrunner_scenario_log_result($junit_results) {
  * @return string
  *   The system path for the module's Behat features directory.
  */
-function behatrunner_module_features_path($module) {
+function behatrunner_feature_path($module) {
   $system_path = DRUPAL_ROOT . '/' . drupal_get_path('module', $module) . '/features';
 
   return $system_path;
@@ -452,7 +452,7 @@ function behatrunner_module_features_path($module) {
  * @return string
  *   The system path for the module's Behat bootstrap directory.
  */
-function behatrunner_module_bootstrap_path($module) {
+function behatrunner_feature_bootstrap_path($module) {
   if (file_exists(drupal_get_path('module', $module) . '/features/bootstrap/FeatureContext.php')) {
     $system_path = DRUPAL_ROOT . '/' . drupal_get_path('module', $module) . '/features/bootstrap';
   }
