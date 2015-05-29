@@ -67,10 +67,13 @@ When I run tests, the output says "No scenarios, No steps"
 --------------------------------------------------------------------------------
 
 You've probably change a scenario since the last time that Behat Runner
-registered it. To update Behat Runner's registration, run `drush brm`.
+registered it. To update Behat Runner's registration, run `drush bscan`.
 
 How do I integrate this module with a continuous integration solution?
 --------------------------------------------------------------------------------
+
+**In Behat 3.x the JUnit support has not been merged into a stable release yet.
+See: https://github.com/Behat/Behat/pull/676 **
 
 Behat Runner writes the results of every test run to public://behatrunner. You
 can configure your Jenkins or Travis CI jobs to look in this directory for the
