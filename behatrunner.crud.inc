@@ -1,7 +1,8 @@
 <?php
 
 /**
- * @param $modules
+ * @param array $modules
+ * @param array $tags
  * @param bool $idOnly
  * @return array
  */
@@ -10,12 +11,12 @@ function behatrunner_scenario_load_filtered($modules = array(), $tags = array(),
     $query->entityCondition('entity_type', 'behatrunner_scenario');
 
     $modules = array_filter($modules);
-    if (!empty($modules)) {
+    if (is_array($modules) && !empty($modules)) {
         $query->propertyCondition('module', $modules, 'IN');
     }
 
     $tags = array_filter($tags);
-    if (!empty($tags)) {
+    if (is_array($tags) && !empty($tags)) {
         $query->propertyCondition('tags', current($tags), 'CONTAINS');
     }
 

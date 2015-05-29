@@ -161,7 +161,7 @@ function behatrunner_deregister_module_scenarios($module = null) {
 
     $module = empty($module) ? array() : array($module);
 
-    $ids = behatrunner_scenario_load_filtered($module, true);
+    $ids = behatrunner_scenario_load_filtered($module, array(), true);
     return behatrunner_scenario_delete_multiple($ids);
 }
 
