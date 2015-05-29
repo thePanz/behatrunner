@@ -17,7 +17,7 @@ function behatrunner_scenario_load_filtered($modules = array(), $tags = array(),
 
     $tags = array_filter($tags);
     if (is_array($tags) && !empty($tags)) {
-        $query->propertyCondition('tags', current($tags), 'CONTAINS');
+        $query->propertyCondition('tags', current($tags) . ' ', 'CONTAINS');
     }
 
     $result = $query->execute();
