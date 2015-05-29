@@ -3,8 +3,39 @@ Installation
 
 *This module must be enabled via drush.*
 
-1. drush en -y behatrunner
-2. drush brun
+`drush en -y behatrunner`
+
+When first enabled, the module does not scan and registered the scenarios defined
+by the currently enabled modules, run `drush bscan` to update and register them.
+
+The module will auto-register the scenarios defined in the modules subsequently
+enabled.
+
+Commands
+--------------------------------------------------------------------------------
+
+- List the registered scenarios
+  `drush bls`
+
+- Scan enabled modules for new scenarios and features
+  `drush bscan`
+
+- Clear the list of registered scenarios
+  `drush bclear`
+
+- Run all the registered tests
+  `drush brun`
+
+- Run all the registered test for the given modules
+  `drush brun --modules=my_module,my_other_module`
+  
+- Run all the registered test for a given tag (single tags supported)
+  `drush brun --tags=theTag`
+
+      
+- Run all the registered test for a given module and a given tag
+  `drush brun --modules=my_module --tags=theTag`  ( *multiple TAGs not currently supported: only the first TAG is used!* )
+
 
 FAQS
 ================================================================================
