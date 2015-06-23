@@ -171,10 +171,10 @@ function behatrunner_test_location_access($op, $projectqa_phploc_result, $accoun
   switch ($op) {
     case 'create':
       return user_access('administer behatrunner_test_location entities', $account)
-          || user_access('create behatrunner_test_location entities', $account);
+      || user_access('create behatrunner_test_location entities', $account);
     case 'view':
       return user_access('administer behatrunner_test_location entities', $account)
-          || user_access('view behatrunner_test_location entities', $account);
+      || user_access('view behatrunner_test_location entities', $account);
   }
 }
 
@@ -183,14 +183,15 @@ function behatrunner_test_location_access($op, $projectqa_phploc_result, $accoun
  * @param $modules
  */
 function behatrunner_modules_disabled($modules) {
-    if (empty($modules))
-        return;
+  if (empty($modules)) {
+    return;
+  }
 
-    module_load_include('inc', 'behatrunner', 'includes/behatrunner');
-    foreach ($modules as $module) {
-        if (behatrunner_module_is_registered($module)) {
-            behatrunner_deregister_module_scenarios($module);
-        }
+  module_load_include('inc', 'behatrunner', 'includes/behatrunner');
+  foreach ($modules as $module) {
+    if (behatrunner_module_is_registered($module)) {
+      behatrunner_deregister_module_scenarios($module);
     }
+  }
 }
 

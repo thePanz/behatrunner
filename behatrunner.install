@@ -24,7 +24,7 @@ function behatrunner_enable() {
   module_load_include('inc', 'behatrunner', 'includes/behatrunner');
 
   $modules = module_list();
-  foreach($modules as $module) {
+  foreach ($modules as $module) {
     $registered = behatrunner_features_scan_module($module);
     if ($registered) {
       drupal_set_message(t('BehatRunner: Added scenarios for module "@module"', array('@module' => $module)), 'success');
