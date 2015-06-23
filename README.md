@@ -5,11 +5,11 @@ Installation
 
 `drush en -y behatrunner`
 
-When first enabled, the module does not scan and registered the scenarios defined
-by the currently enabled modules, run `drush bscan` to update and register them.
+When first enabled, the module scan and registered the scenarios defined by the
+currently enabled modules, run `drush bscan` to update and register them.
 
-The module will auto-register the scenarios defined in the modules subsequently
-enabled.
+The module will auto-deregister the scenarios defined in the modules subsequently
+disabled.
 
 Commands
 --------------------------------------------------------------------------------
