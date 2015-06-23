@@ -78,3 +78,18 @@ See: https://github.com/Behat/Behat/pull/676 **
 Behat Runner writes the results of every test run to public://behatrunner. You
 can configure your Jenkins or Travis CI jobs to look in this directory for the
 JUnit-formatted XML output.
+
+Error: Maximum nesting level of 100 reached
+--------------------------------------------------------------------------------
+This error is caused by XDebug, chech: https://github.com/Behat/Behat/pull/730
+for further details (this issue will be closed when a stable release of Behat
+that includes the PR will be available)
+
+Error: User not logged-in
+--------------------------------------------------------------------------------
+The DrupalExtension checks the "I am logged in" by lookinf for a "log-out" link
+on the main page. Depending on your theme, this could not be always true.
+DrupalExtension PR https://github.com/jhedstrom/drupalextension/pull/131 tackle
+this issue, but at time of writing (2015-06-23) it is still pending and not
+committed.
+
