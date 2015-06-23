@@ -15,6 +15,22 @@ function behatrunner_install() {
 
 }
 
+/**
+ * Implemente hook_enable().
+ *
+ * Automatically scan available scenarios when the module is enabled.
+ */
+function behatrunner_enable() {
+  module_load_include('inc', 'behatrunner', 'includes/behatrunner');
+
+  $modules = module_list();
+  foreach($modules as $module) {
+    $registered = behatrunner_features_scan_module($module);
+    if ($registered) {
+      drupal_set_message(t('BehatRunner: Added scenarios for module "@module"', array('@module' => $module)), 'success');
+    }
+  }
+}
 
 /**
  * Implements hook_composer_dependencies_install().
