@@ -35,6 +35,7 @@ function behatrunner_composer_dependencies_install() {
   // Modify configuration to reflect actual site parameters.
   $behat_conf['default']['extensions']['Behat\MinkExtension']['base_url'] = $base_url;
   $behat_conf['default']['extensions']['Drupal\DrupalExtension']['drupal']['drupal_root'] = DRUPAL_ROOT;
+  $behat_conf['default']['extensions']['Drupal\MinkExtension']['files_path'] = DRUPAL_ROOT;
 
   // Write to file.
   $dumper = new Symfony\Component\Yaml\Dumper();

@@ -15,6 +15,7 @@ default:
       selenium2:
         wd_host: 'http://127.0.0.1:4444/wd/hub'
       base_url: http://drupalsite.dev
+      files_path: "/var/www/drupalsite"
     Drupal\DrupalExtension:
       blackbox: ~
       api_driver: drupal
