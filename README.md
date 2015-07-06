@@ -81,7 +81,7 @@ JUnit-formatted XML output.
 
 Error: Maximum nesting level of 100 reached
 --------------------------------------------------------------------------------
-This error is caused by XDebug, chech: https://github.com/Behat/Behat/pull/730
+This error is caused by XDebug, check: https://github.com/Behat/Behat/pull/730
 for further details (this issue will be closed when a stable release of Behat
 that includes the PR will be available)
 
