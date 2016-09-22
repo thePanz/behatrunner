@@ -93,3 +93,12 @@ DrupalExtension PR https://github.com/jhedstrom/drupalextension/pull/131 tackle
 this issue, but at time of writing (2015-06-23) it is still pending and not
 committed.
 
+Error: Symfony\Component\Process\Exception\ProcessTimedOutException exception
+--------------------------------------------------------------------------------
+There can be two reasons for this exception: 
+
+1. Selenium2 is not compatible with firefox versions above 46. Downgrade your 
+   firefox to 46 or earlier. 
+2. Your tests take too long to execute. You can set the timeout limit through 
+   the behatrunner_process_timeout drupal variable, e.g. 
+   `drush vset behatrunner_process_timeout 240` 

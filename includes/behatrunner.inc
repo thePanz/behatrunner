@@ -351,7 +351,7 @@ function behatrunner_command_execute_test($binaryCommand, $scenarioLocation, $ar
 
     // @todo: find a better implementation for command arguments by using ProcessBuilder
     $command = $binaryCommand . ' ' . implode(' ', $arguments) . ' ' . $scenarioLocation;
-    $process = new Symfony\Component\Process\Process($command);
+    $process = new Symfony\Component\Process\Process($command, NULL, NULL, NULL, variable_get('behatrunner_process_timeout', 60));
 
     $process->run(function ($type, $buffer) {
         print $buffer;
